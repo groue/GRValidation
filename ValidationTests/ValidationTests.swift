@@ -41,19 +41,41 @@ class ValidationTests: XCTestCase {
     }
     
     func testValidationNotEmpty() {
-        let v = ValidationNotEmpty()
+        let v = ValidationNotEmpty<[Int]>()
+        assertNoError() {
+            let result = try v.validate([1,2,3])
+            XCTAssertEqual(result, [1,2,3])
+        }
+        assertValidationError() {
+            try v.validate([])
+        }
+    }
+    
+    func testRegularExpressionValidationFromPattern() {
+        let v = ValidationRegularExpression(pattern: "foo")
+        assertNoError() {
+            let result = try v.validate("xxxfooxxx")
+            XCTAssertEqual(result, "xxxfooxxx")
+        }
+        assertValidationError() {
+            try v.validate("bar")
+        }
+    }
+    
+    func testRegularExpressionValidationFromRegularExpression() {
+        let v = try! ValidationRegularExpression(NSRegularExpression(pattern: "^foo$", options: NSRegularExpressionOptions()))
         assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
         assertValidationError() {
-            try v.validate("")
+            try v.validate("xxxfooxxx")
         }
     }
     
     func testAnyValidationFromBlock() {
         let v = AnyValidation { (value: Int) -> Int in
-            guard value != 10 else { throw ValidationError(value: value, description: "should not be 10") }
+            guard value != 10 else { throw ValidationError(value: value, description: "should not be 10.") }
             return value
         }
         assertNoError() {
@@ -76,8 +98,19 @@ class ValidationTests: XCTestCase {
         }
     }
     
+    func testFlatMap() {
+        let v = ValidationNotNil<String>().flatMap { return $0.characters.count }
+        assertNoError() {
+            let result = try v.validate("foo")
+            XCTAssertEqual(result, 3)
+        }
+        assertValidationError() {
+            try v.validate(nil)
+        }
+    }
+    
     func testComposedValidation() {
-        let v = ValidationNotNil<String>() >>> ValidationNotEmpty()
+        let v = ValidationNotNil<String>().flatMap { return $0.characters } >>> ValidationNotEmpty().flatMap { String($0) }
         assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
@@ -91,12 +124,12 @@ class ValidationTests: XCTestCase {
     }
     
     func testOrValidation() {
-        let v = AnyValidation { (value: String) -> String in
-            guard value == "foo" else { throw ValidationError(value: value, description: "should be foo") }
-            return value
-        } || AnyValidation { (value: String) -> String in
-            guard value == "bar" else { throw ValidationError(value: value, description: "should be bar") }
-            return value
+        let v = AnyValidation { (value: String) -> Int in
+            guard value == "foo" else { throw ValidationError(value: value, description: "should be foo.") }
+            return 1
+        } || AnyValidation { (value: String) -> Bool in
+            guard value == "bar" else { throw ValidationError(value: value, description: "should be bar.") }
+            return true
         }
         assertNoError() {
             let result = try v.validate("foo")
@@ -111,16 +144,23 @@ class ValidationTests: XCTestCase {
         }
     }
     
-    func testFlatMap() {
-        let v = ValidationNotNil<String>()
-            .flatMap { return $0.characters.count }
-            >>> ValidationGreaterThanOrEqual(3)
+    func testAndValidation() {
+        let v = AnyValidation { (value: String) -> Int in
+            guard value.characters.count >= 2 else { throw ValidationError(value: value, description: "should have at least 2 characters.") }
+            return 1
+        } && AnyValidation { (value: String) -> Bool in
+            guard value.characters.count <= 5 else { throw ValidationError(value: value, description: "should have at most 5 characters.") }
+            return true
+        }
         assertNoError() {
-            let result = try v.validate("foobar")
-            XCTAssertEqual(result, 6)
+            let result = try v.validate("foo")
+            XCTAssertEqual(result, "foo")
         }
         assertValidationError() {
-            try v.validate("")
+            try v.validate("a")
+        }
+        assertValidationError() {
+            try v.validate("abcdef")
         }
     }
 }
