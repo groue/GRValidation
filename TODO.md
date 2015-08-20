@@ -3,3 +3,4 @@
 - [ ] error localization
 - [ ] custom errors
 - [ ] custom localization of built-in errors
+- [ ] global validation of an object (like "Please provide a phone number or an email")
