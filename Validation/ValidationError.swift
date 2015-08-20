@@ -8,9 +8,9 @@
 
 indirect public enum ValidationError : ErrorType {
     case Value(value: Any?, message: String)
-    case Multiple([ValidationError])
     case Property(owner: Any?, propertyName: String, error: ValidationError)
     case Global(owner: Any?, description: String, error: ValidationError)
+    case Multiple([ValidationError])
 }
 
 extension ValidationError : CustomStringConvertible {
@@ -28,13 +28,13 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Multiple(let children):
-            return " ".join(children.map { $0.description(valueDescription) })
         case .Property(_, let propertyName, let error):
             let valueDescription = valueDescription ?? propertyName
             return error.description(valueDescription)
         case .Global(_, let description, _):
             return description
+        case .Multiple(let children):
+            return " ".join(children.map { $0.description(valueDescription) })
         }
     }
 }
