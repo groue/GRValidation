@@ -12,42 +12,42 @@ import Foundation
 // MARK: - Validation
 
 public protocol Validation {
-    typealias InputType
-    typealias OutputType
-    func validate(value: InputType) throws -> OutputType
+    typealias TestedType
+    typealias ValidType
+    func validate(value: TestedType) throws -> ValidType
 }
 
 /// A type-erased validation.
-public struct AnyValidation<InputType, OutputType> : Validation {
+public struct AnyValidation<TestedType, ValidType> : Validation {
     /// Wrap and forward operations to `base`.
-    public init<V: Validation where V.InputType == InputType, V.OutputType == OutputType>(_ base: V) {
+    public init<V: Validation where V.TestedType == TestedType, V.ValidType == ValidType>(_ base: V) {
         self.init { return try base.validate($0) }
     }
     /// Create a validation whose `validate()` method forwards to `block`.
-    public init(_ block: (InputType) throws -> OutputType) {
+    public init(_ block: (TestedType) throws -> ValidType) {
         self.block = block
     }
-    public func validate(value: InputType) throws -> OutputType {
+    public func validate(value: TestedType) throws -> ValidType {
         return try block(value)
     }
-    private let block: (InputType) throws -> OutputType
+    private let block: (TestedType) throws -> ValidType
 }
 
 
 // MARK: - Composed Validations
 
 extension Validation {
-    public func flatMap<Result>(block: (OutputType) -> Result) -> AnyValidation<InputType, Result> {
+    public func flatMap<Result>(block: (ValidType) -> Result) -> AnyValidation<TestedType, Result> {
         return AnyValidation { try block(self.validate($0)) }
     }
 }
 
 infix operator >>> { associativity left }
-public func >>> <Left : Validation, Right : Validation where Left.OutputType == Right.InputType>(left: Left, right: Right) -> AnyValidation<Left.InputType, Right.OutputType> {
+public func >>> <Left : Validation, Right : Validation where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { return try right.validate(left.validate($0)) }
 }
 
-public func ||<Left : Validation, Right : Validation where Left.InputType == Right.InputType>(left: Left, right: Right) -> AnyValidation<Left.InputType, Left.InputType> {
+public func ||<Left : Validation, Right : Validation where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
     return AnyValidation {
         do {
             try left.validate($0)
@@ -63,7 +63,7 @@ public func ||<Left : Validation, Right : Validation where Left.InputType == Rig
     }
 }
 
-public func &&<Left : Validation, Right : Validation where Left.InputType == Right.InputType>(left: Left, right: Right) -> AnyValidation<Left.InputType, Left.InputType> {
+public func &&<Left : Validation, Right : Validation where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
     return AnyValidation {
         var errors = [ValidationError]()
         

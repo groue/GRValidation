@@ -7,9 +7,10 @@
 //
 
 public struct ValidationError : ErrorType {
-    public enum Type {
+    public indirect enum Type {
         case Value(value: Any?, message: String)
         case Multiple([ValidationError])
+        case Property(propertyName: String, error: ValidationError)
     }
     public let type: Type
     
@@ -20,19 +21,30 @@ public struct ValidationError : ErrorType {
     public init(children: [ValidationError]) {
         self.type = .Multiple(children)
     }
+    public init(propertyName: String, error: ValidationError) {
+        self.type = .Property(propertyName: propertyName, error: error)
+    }
 }
 
 extension ValidationError : CustomStringConvertible {
     public var description: String {
+        return description(nil)
+    }
+    
+    public func description(valueDescription: String?) -> String {
         switch type {
         case .Value(let value, let message):
             if let value = value {
-                return "\(String(reflecting: value)) \(message)"
+                let valueDescription = valueDescription ?? String(reflecting: value)
+                return "\(valueDescription) \(message)"
             } else {
-                return "\(String(reflecting: value)) \(message)"
+                return "\(valueDescription) \(message)"
             }
         case .Multiple(let children):
-            return " ".join(children.map { $0.description })
+            return " ".join(children.map { $0.description(valueDescription) })
+        case .Property(let propertyName, let error):
+            let valueDescription = valueDescription ?? propertyName
+            return error.description(valueDescription)
         }
     }
 }

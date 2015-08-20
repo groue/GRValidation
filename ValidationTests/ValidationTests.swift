@@ -15,26 +15,7 @@ enum ValidatedRawRepresentable: Int {
     case Two
 }
 
-class ValidationTests: XCTestCase {
-    
-    func assertNoError(block: () throws -> ()) {
-        do {
-            try block()
-        } catch {
-            XCTFail("\(error)")
-        }
-    }
-    
-    func assertValidationError(expectedErrorDescription: String, block: () throws -> ()) {
-        do {
-            try block()
-            XCTFail("ValidationError expected")
-        } catch let error as ValidationError {
-            XCTAssertEqual(error.description, expectedErrorDescription)
-        } catch {
-            XCTFail("ValidationError expected")
-        }
-    }
+class ValidationTests: ValidationTestCase {
     
     func testValidationSuccess() {
         let v = ValidationSuccess<Int>()

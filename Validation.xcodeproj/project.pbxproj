@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5623D11F1B86301300130B9A /* ValidationTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5623D11E1B86301300130B9A /* ValidationTestCase.swift */; };
 		56F4ED531B85CCF900DA5B88 /* Validation.h in Headers */ = {isa = PBXBuildFile; fileRef = 56F4ED521B85CCF900DA5B88 /* Validation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		56F4ED5A1B85CCF900DA5B88 /* Validation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56F4ED4F1B85CCF900DA5B88 /* Validation.framework */; };
 		56F4ED5F1B85CCF900DA5B88 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F4ED5E1B85CCF900DA5B88 /* ValidationTests.swift */; };
@@ -26,6 +27,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5623D11D1B86266900130B9A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
+		5623D11E1B86301300130B9A /* ValidationTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTestCase.swift; sourceTree = "<group>"; };
 		56F4ED4F1B85CCF900DA5B88 /* Validation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Validation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		56F4ED521B85CCF900DA5B88 /* Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Validation.h; sourceTree = "<group>"; };
 		56F4ED541B85CCF900DA5B88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -59,6 +62,7 @@
 		56F4ED451B85CCF900DA5B88 = {
 			isa = PBXGroup;
 			children = (
+				5623D11D1B86266900130B9A /* TODO.md */,
 				56F4ED511B85CCF900DA5B88 /* Validation */,
 				56F4ED5D1B85CCF900DA5B88 /* ValidationTests */,
 				56F4ED501B85CCF900DA5B88 /* Products */,
@@ -88,9 +92,10 @@
 		56F4ED5D1B85CCF900DA5B88 /* ValidationTests */ = {
 			isa = PBXGroup;
 			children = (
+				56F4ED701B86027E00DA5B88 /* PropertyValidationTests.swift */,
+				5623D11E1B86301300130B9A /* ValidationTestCase.swift */,
 				56F4ED5E1B85CCF900DA5B88 /* ValidationTests.swift */,
 				56F4ED601B85CCF900DA5B88 /* Info.plist */,
-				56F4ED701B86027E00DA5B88 /* PropertyValidationTests.swift */,
 			);
 			path = ValidationTests;
 			sourceTree = "<group>";
@@ -213,6 +218,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				56F4ED5F1B85CCF900DA5B88 /* ValidationTests.swift in Sources */,
+				5623D11F1B86301300130B9A /* ValidationTestCase.swift in Sources */,
 				56F4ED711B86027E00DA5B88 /* PropertyValidationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
