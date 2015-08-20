@@ -65,9 +65,28 @@ public func ||<Left : Validation, Right : Validation where Left.InputType == Rig
 
 public func &&<Left : Validation, Right : Validation where Left.InputType == Right.InputType>(left: Left, right: Right) -> AnyValidation<Left.InputType, Left.InputType> {
     return AnyValidation {
-        try left.validate($0)
-        try right.validate($0)
-        return $0
+        var errors = [ValidationError]()
+        
+        do {
+            try left.validate($0)
+        } catch let error as ValidationError {
+            errors.append(error)
+        }
+        
+        do {
+            try right.validate($0)
+        } catch let error as ValidationError {
+            errors.append(error)
+        }
+        
+        switch errors.count {
+        case 0:
+            return $0
+        case 1:
+            throw errors.first!
+        default:
+            throw ValidationError(children: errors)
+        }
     }
 }
 

@@ -241,22 +241,25 @@ class ValidationTests: XCTestCase {
     }
     
     func testAndValidation() {
-        let v = AnyValidation { (value: String) -> Int in
-            guard value.characters.count >= 2 else { throw ValidationError(value: value, message: "should have at least 2 characters.") }
-            return 1
-        } && AnyValidation { (value: String) -> Bool in
-            guard value.characters.count <= 5 else { throw ValidationError(value: value, message: "should have at most 5 characters.") }
+        let v = AnyValidation { (value: Int) -> String in
+            guard value % 2 == 1 else { throw ValidationError(value: value, message: "should be odd.") }
+            return "foo"
+        } && AnyValidation { (value: Int) -> Bool in
+            guard value <= 10 else { throw ValidationError(value: value, message: "should be less than 10.") }
             return true
         }
         assertNoError() {
-            let result = try v.validate("foo")
-            XCTAssertEqual(result, "foo")
+            let result = try v.validate(5)
+            XCTAssertEqual(result, 5)
         }
-        assertValidationError("\"a\" should have at least 2 characters.") {
-            try v.validate("a")
+        assertValidationError("2 should be odd.") {
+            try v.validate(2)
         }
-        assertValidationError("\"abcdef\" should have at most 5 characters.") {
-            try v.validate("abcdef")
+        assertValidationError("11 should be less than 10.") {
+            try v.validate(11)
+        }
+        assertValidationError("12 should be odd. 12 should be less than 10.") {
+            try v.validate(12)
         }
     }
 }
