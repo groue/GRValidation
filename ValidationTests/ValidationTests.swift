@@ -9,6 +9,12 @@
 import XCTest
 import Validation
 
+enum ValidatedRawRepresentable: Int {
+    case Zero
+    case One
+    case Two
+}
+
 class ValidationTests: XCTestCase {
     
     func assertNoError(block: () throws -> ()) {
@@ -74,6 +80,39 @@ class ValidationTests: XCTestCase {
         }
         assertValidationError() {
             try v.validate("")
+        }
+    }
+    
+    func testValidationRawValue() {
+        let v = ValidationRawValue<ValidatedRawRepresentable>()
+        assertNoError() {
+            let result = try v.validate(1)
+            XCTAssertEqual(result, ValidatedRawRepresentable.One)
+        }
+        assertValidationError() {
+            try v.validate(5)
+        }
+    }
+    
+    func testValidationEqual() {
+        let v = ValidationEqual(1)
+        assertNoError() {
+            let result = try v.validate(1)
+            XCTAssertEqual(result, 1)
+        }
+        assertValidationError() {
+            try v.validate(2)
+        }
+    }
+    
+    func testValidationNotEqual() {
+        let v = ValidationNotEqual(1)
+        assertNoError() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertValidationError() {
+            try v.validate(1)
         }
     }
     

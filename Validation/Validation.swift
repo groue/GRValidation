@@ -138,6 +138,42 @@ public struct ValidationNotEmpty<C: CollectionType>: Validation {
     }
 }
 
+public struct ValidationEqual<T where T: Equatable> : Validation {
+    public let target: T
+    public init(_ target: T) {
+        self.target = target
+    }
+    public func validate(value: T) throws -> T {
+        guard value == target else {
+            throw ValidationError(value: value, description: "should be equal to \(target).")
+        }
+        return value
+    }
+}
+
+public struct ValidationNotEqual<T where T: Equatable> : Validation {
+    public let target: T
+    public init(_ target: T) {
+        self.target = target
+    }
+    public func validate(value: T) throws -> T {
+        guard value != target else {
+            throw ValidationError(value: value, description: "should not be equal to \(target).")
+        }
+        return value
+    }
+}
+
+public struct ValidationRawValue<T where T: RawRepresentable> : Validation {
+    public init() { }
+    public func validate(value: T.RawValue) throws -> T {
+        guard let result = T(rawValue: value) else {
+            throw ValidationError(value: value, description: "is invalid.")
+        }
+        return result
+    }
+}
+
 public struct ValidationGreaterThanOrEqual<T where T: Comparable> : Validation {
     public let minimum: T
     public init(_ minimum: T) {
