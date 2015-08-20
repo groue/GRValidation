@@ -94,6 +94,20 @@ public func &&<V1 : Validation, V2 : Validation where V1.InputType == V2.InputTy
 
 // MARK: - Concrete Validations
 
+public struct ValidationSuccess<T>: Validation {
+    public init() { }
+    public func validate(value: T) throws -> T {
+        return value
+    }
+}
+
+public struct ValidationFailure<T>: Validation {
+    public init() { }
+    public func validate(value: T) throws -> T {
+        throw ValidationError(value: value, description: "is not valid.")
+    }
+}
+
 public struct ValidationNotNil<T> : Validation {
     public init() { }
     public func validate(value: T?) throws -> T {

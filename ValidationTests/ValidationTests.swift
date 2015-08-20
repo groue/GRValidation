@@ -29,6 +29,21 @@ class ValidationTests: XCTestCase {
         }
     }
     
+    func testValidationSuccess() {
+        let v = ValidationSuccess<Int>()
+        assertNoError() {
+            let result = try v.validate(1)
+            XCTAssertEqual(result, 1)
+        }
+    }
+    
+    func testValidationFailure() {
+        let v = ValidationFailure<Int>()
+        assertValidationError() {
+            try v.validate(1)
+        }
+    }
+    
     func testValidationNotNil() {
         let v = ValidationNotNil<Int>()
         assertNoError() {
