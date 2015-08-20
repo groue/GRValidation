@@ -25,11 +25,12 @@ class ValidationTests: XCTestCase {
         }
     }
     
-    func assertValidationError(block: () throws -> ()) {
+    func assertValidationError(expectedErrorDescription: String, block: () throws -> ()) {
         do {
             try block()
             XCTFail("ValidationError expected")
-        } catch _ as ValidationError {
+        } catch let error as ValidationError {
+            XCTAssertEqual(error.description, expectedErrorDescription)
         } catch {
             XCTFail("ValidationError expected")
         }
@@ -45,7 +46,7 @@ class ValidationTests: XCTestCase {
     
     func testValidationFailure() {
         let v = ValidationFailure<Int>()
-        assertValidationError() {
+        assertValidationError("1 is invalid.") {
             try v.validate(1)
         }
     }
@@ -56,7 +57,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValidationError() {
+        assertValidationError("nil should not be nil.") {
             try v.validate(nil)
         }
     }
@@ -67,7 +68,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate([1,2,3])
             XCTAssertEqual(result, [1,2,3])
         }
-        assertValidationError() {
+        assertValidationError("[] should not be empty.") {
             try v.validate([])
         }
     }
@@ -78,7 +79,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
-        assertValidationError() {
+        assertValidationError("\"\" should not be empty.") {
             try v.validate("")
         }
     }
@@ -89,7 +90,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(1)
             XCTAssertEqual(result, ValidatedRawRepresentable.One)
         }
-        assertValidationError() {
+        assertValidationError("5 is invalid.") {
             try v.validate(5)
         }
     }
@@ -100,7 +101,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValidationError() {
+        assertValidationError("2 should be equal to 1.") {
             try v.validate(2)
         }
     }
@@ -111,7 +112,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValidationError() {
+        assertValidationError("1 should not be equal to 1.") {
             try v.validate(1)
         }
     }
@@ -126,7 +127,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValidationError() {
+        assertValidationError("3 should be less or equal to 2.") {
             try v.validate(3)
         }
     }
@@ -141,7 +142,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValidationError() {
+        assertValidationError("1 should be greater or equal to 2.") {
             try v.validate(1)
         }
     }
@@ -152,7 +153,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate("xxxfooxxx")
             XCTAssertEqual(result, "xxxfooxxx")
         }
-        assertValidationError() {
+        assertValidationError("\"bar\" is invalid.") {
             try v.validate("bar")
         }
     }
@@ -163,21 +164,21 @@ class ValidationTests: XCTestCase {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
-        assertValidationError() {
+        assertValidationError("\"xxxfooxxx\" is invalid.") {
             try v.validate("xxxfooxxx")
         }
     }
     
     func testAnyValidationFromBlock() {
         let v = AnyValidation { (value: Int) -> Int in
-            guard value != 10 else { throw ValidationError(value: value, description: "should not be 10.") }
+            guard value != 10 else { throw ValidationError(value: value, message: "should not be 10.") }
             return value
         }
         assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValidationError() {
+        assertValidationError("10 should not be 10.") {
             try v.validate(10)
         }
     }
@@ -188,7 +189,7 @@ class ValidationTests: XCTestCase {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValidationError() {
+        assertValidationError("nil should not be nil.") {
             try v.validate(nil)
         }
     }
@@ -199,31 +200,31 @@ class ValidationTests: XCTestCase {
             let result = try v.validate("foo")
             XCTAssertEqual(result, 3)
         }
-        assertValidationError() {
+        assertValidationError("nil should not be nil.") {
             try v.validate(nil)
         }
     }
     
     func testComposedValidation() {
-        let v = ValidationNotNil<String>().flatMap { return $0.characters } >>> ValidationNotEmpty().flatMap { String($0) }
+        let v = ValidationNotNil<String>() >>> ValidationStringNotEmpty()
         assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
-        assertValidationError() {
+        assertValidationError("nil should not be nil.") {
             try v.validate(nil)
         }
-        assertValidationError() {
+        assertValidationError("\"\" should not be empty.") {
             try v.validate("")
         }
     }
     
     func testOrValidation() {
         let v = AnyValidation { (value: String) -> Int in
-            guard value == "foo" else { throw ValidationError(value: value, description: "should be foo.") }
+            guard value == "foo" else { throw ValidationError(value: value, message: "should be foo.") }
             return 1
         } || AnyValidation { (value: String) -> Bool in
-            guard value == "bar" else { throw ValidationError(value: value, description: "should be bar.") }
+            guard value == "bar" else { throw ValidationError(value: value, message: "should be bar.") }
             return true
         }
         assertNoError() {
@@ -234,27 +235,27 @@ class ValidationTests: XCTestCase {
             let result = try v.validate("bar")
             XCTAssertEqual(result, "bar")
         }
-        assertValidationError() {
+        assertValidationError("\"qux\" should be foo. \"qux\" should be bar.") {
             try v.validate("qux")
         }
     }
     
     func testAndValidation() {
         let v = AnyValidation { (value: String) -> Int in
-            guard value.characters.count >= 2 else { throw ValidationError(value: value, description: "should have at least 2 characters.") }
+            guard value.characters.count >= 2 else { throw ValidationError(value: value, message: "should have at least 2 characters.") }
             return 1
         } && AnyValidation { (value: String) -> Bool in
-            guard value.characters.count <= 5 else { throw ValidationError(value: value, description: "should have at most 5 characters.") }
+            guard value.characters.count <= 5 else { throw ValidationError(value: value, message: "should have at most 5 characters.") }
             return true
         }
         assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
-        assertValidationError() {
+        assertValidationError("\"a\" should have at least 2 characters.") {
             try v.validate("a")
         }
-        assertValidationError() {
+        assertValidationError("\"abcdef\" should have at most 5 characters.") {
             try v.validate("abcdef")
         }
     }
