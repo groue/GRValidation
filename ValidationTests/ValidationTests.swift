@@ -66,6 +66,17 @@ class ValidationTests: XCTestCase {
         }
     }
     
+    func testValidationStringNotEmpty() {
+        let v = ValidationStringNotEmpty()
+        assertNoError() {
+            let result = try v.validate("foo")
+            XCTAssertEqual(result, "foo")
+        }
+        assertValidationError() {
+            try v.validate("")
+        }
+    }
+    
     func testValidationLessThanOrEqual() {
         let v = ValidationLessThanOrEqual(2)
         assertNoError() {

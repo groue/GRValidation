@@ -44,25 +44,25 @@ public struct AnyValidation<InputType, OutputType> : Validation {
 }
 
 
-public struct ComposedValidation<V1 : Validation, V2 : Validation where V1.OutputType == V2.InputType> : Validation {
-    let left: V1
-    let right: V2
+public struct ComposedValidation<Left : Validation, Right : Validation where Left.OutputType == Right.InputType> : Validation {
+    let left: Left
+    let right: Right
     
-    public func validate(value: V1.InputType) throws -> V2.OutputType {
+    public func validate(value: Left.InputType) throws -> Right.OutputType {
         return try right.validate(left.validate(value))
     }
 }
 
 infix operator >>> { associativity left }
-public func >>> <V1 : Validation, V2 : Validation where V1.OutputType == V2.InputType>(left: V1, right: V2) -> ComposedValidation<V1, V2> {
+public func >>> <Left : Validation, Right : Validation where Left.OutputType == Right.InputType>(left: Left, right: Right) -> ComposedValidation<Left, Right> {
     return ComposedValidation(left: left, right: right)
 }
 
-public struct OrValidation<V1 : Validation, V2 : Validation where V1.InputType == V2.InputType> : Validation {
-    let left: V1
-    let right: V2
+public struct OrValidation<Left : Validation, Right : Validation where Left.InputType == Right.InputType> : Validation {
+    let left: Left
+    let right: Right
     
-    public func validate(value: V1.InputType) throws -> V1.InputType {
+    public func validate(value: Left.InputType) throws -> Left.InputType {
         do {
             try left.validate(value)
         } catch {
@@ -72,22 +72,22 @@ public struct OrValidation<V1 : Validation, V2 : Validation where V1.InputType =
     }
 }
 
-public func ||<V1 : Validation, V2 : Validation where V1.InputType == V2.InputType>(left: V1, right: V2) -> OrValidation<V1, V2> {
+public func ||<Left : Validation, Right : Validation where Left.InputType == Right.InputType>(left: Left, right: Right) -> OrValidation<Left, Right> {
     return OrValidation(left: left, right: right)
 }
 
-public struct AndValidation<V1 : Validation, V2 : Validation where V1.InputType == V2.InputType> : Validation {
-    let left: V1
-    let right: V2
+public struct AndValidation<Left : Validation, Right : Validation where Left.InputType == Right.InputType> : Validation {
+    let left: Left
+    let right: Right
     
-    public func validate(value: V1.InputType) throws -> V1.InputType {
+    public func validate(value: Left.InputType) throws -> Left.InputType {
         try left.validate(value)
         try right.validate(value)
         return value
     }
 }
 
-public func &&<V1 : Validation, V2 : Validation where V1.InputType == V2.InputType>(left: V1, right: V2) -> AndValidation<V1, V2> {
+public func &&<Left : Validation, Right : Validation where Left.InputType == Right.InputType>(left: Left, right: Right) -> AndValidation<Left, Right> {
     return AndValidation(left: left, right: right)
 }
 
@@ -115,6 +115,16 @@ public struct ValidationNotNil<T> : Validation {
             throw ValidationError(value: value, description: "should not be nil.")
         }
         return notNilValue
+    }
+}
+
+public struct ValidationStringNotEmpty : Validation {
+    public init() { }
+    public func validate(string: String) throws -> String {
+        guard string.characters.count > 0 else {
+            throw ValidationError(value: string, description: "should not be empty.")
+        }
+        return string
     }
 }
 
