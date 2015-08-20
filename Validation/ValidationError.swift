@@ -21,11 +21,12 @@ extension ValidationError : CustomStringConvertible {
     public func description(valueDescription: String?) -> String {
         switch self {
         case .Value(let value, let message):
-            if let value = value {
-                let valueDescription = valueDescription ?? String(reflecting: value)
+            if let valueDescription = valueDescription {
                 return "\(valueDescription) \(message)"
+            } else if let value = value {
+                return "\(String(reflecting: value)) \(message)"
             } else {
-                return "\(valueDescription) \(message)"
+                return "nil \(message)"
             }
         case .Multiple(let children):
             return " ".join(children.map { $0.description(valueDescription) })
