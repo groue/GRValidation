@@ -15,42 +15,21 @@ struct Model {
     let magicWord: String?
     
     func validate() throws {
-        let v = AnyValidation { (model: Model) in return model }
-            >>> ((AnyValidation { $0.name } >>> ValidationNotNil() >>> ValidationStringNotEmpty())
-                && (AnyValidation { $0.age } >>> ValidationNotNil() >>> ValidationGreaterThanOrEqual(0))
-                && (AnyValidation { $0.magicWord }
+        let v = Validation<Model>()
+            >>> (
+                    // TODO: $0.name is too far away from forPropertyName("name")
+                   ({ $0.name }
+                    >>> ValidationNotNil()
+                    >>> ValidationStringNotEmpty()).forPropertyName("name")
+                && ({ $0.age }
+                    >>> ValidationNotNil()
+                    >>> ValidationGreaterThanOrEqual(0)).forPropertyName("age")
+                && ({ $0.magicWord }
                     >>> ValidationNotNil<String>()
                     >>> (ValidationRegularExpression(pattern: "foo")
-                        && ValidationRegularExpression(pattern: "bar")))
-        )
+                         && ValidationRegularExpression(pattern: "bar"))).forPropertyName("magicWord"))
         try v.validate(self)
     }
-    
-//    static let nameValidation = ValidationNotNil<String>() >>> ValidationStringNotEmpty()
-//    static let ageValidation = ValidationNotNil<Int>() >>> ValidationGreaterThanOrEqual(0)
-//    static let magicWordValidation = ValidationNotNil<String>() >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))
-    //    func validate() throws {
-    //        try Model.nameValidation.validate(name)
-    //        try Model.ageValidation.validate(age)
-    //        try Model.magicWordValidation.validate(magicWord)
-    //    }
-    
-//    func validationPlan() -> ValidationPlan {
-//        var plan = ValidationPlan()
-//        plan.addValidation(
-//            "name",
-//            value: name,
-//            validation: ValidationNotNil<String>() >>> ValidationStringNotEmpty())
-//        plan.addValidation(
-//            "age",
-//            value: age,
-//            validation: ValidationNotNil<Int>() >>> ValidationGreaterThanOrEqual(0))
-//        plan.addValidation(
-//            "magicWord",
-//            value: magicWord,
-//            validation: ValidationNotNil<String>() >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")))
-//        return plan
-//    }
 }
 
 //struct ValidationPlan {
@@ -67,7 +46,7 @@ struct Model {
 //            }
 //        }
 //    }
-//    
+//
 //    func run() throws {
 //        let validationErrors = validationBlocks.map { $0() }.flatMap { $0 }
 //        switch validationErrors.count {
@@ -89,11 +68,11 @@ class PropertyValidationTests: ValidationTestCase {
             try model.validate()
         }
     }
-
+    
     func testInvalidModel() {
         let model = Model(name: "", age: -12, magicWord: "qux")
-        // TODO: avoid duplicated error descriptions ("qux" is invalid.)
-        assertValidationError("\"\" should not be empty. -12 should be greater or equal to 0. \"qux\" is invalid. \"qux\" is invalid.") {
+        // TODO: avoid duplicated error descriptions (magicWord is invalid.)
+        assertValidationError("name should not be empty. age should be greater or equal to 0. magicWord is invalid. magicWord is invalid.") {
             try model.validate()
         }
     }

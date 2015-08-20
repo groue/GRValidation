@@ -17,8 +17,8 @@ enum ValidatedRawRepresentable: Int {
 
 class ValidationTests: ValidationTestCase {
     
-    func testValidationSuccess() {
-        let v = ValidationSuccess<Int>()
+    func testValidation() {
+        let v = Validation<Int>()
         assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
@@ -176,7 +176,20 @@ class ValidationTests: ValidationTestCase {
     }
     
     func testFlatMap() {
+        // TODO: see if syntax is nicer than testFlatMapOperator()
         let v = ValidationNotNil<String>().flatMap { return $0.characters.count }
+        assertNoError() {
+            let result = try v.validate("foo")
+            XCTAssertEqual(result, 3)
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
+    }
+    
+    func testFlatMapOperator() {
+        // TODO: see if syntax is nicer than testFlatMap()
+        let v = ValidationNotNil<String>() >>> { return $0.characters.count }
         assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, 3)

@@ -11,16 +11,16 @@ import Foundation
 
 // MARK: - Validation
 
-public protocol Validation {
+public protocol ValidationType {
     typealias TestedType
     typealias ValidType
     func validate(value: TestedType) throws -> ValidType
 }
 
 /// A type-erased validation.
-public struct AnyValidation<TestedType, ValidType> : Validation {
+public struct AnyValidation<TestedType, ValidType> : ValidationType {
     /// Wrap and forward operations to `base`.
-    public init<V: Validation where V.TestedType == TestedType, V.ValidType == ValidType>(_ base: V) {
+    public init<V: ValidationType where V.TestedType == TestedType, V.ValidType == ValidType>(_ base: V) {
         self.init { return try base.validate($0) }
     }
     /// Create a validation whose `validate()` method forwards to `block`.
@@ -34,20 +34,43 @@ public struct AnyValidation<TestedType, ValidType> : Validation {
 }
 
 
+// MARK: - Property Validations
+
+extension ValidationType {
+    public func forPropertyName(propertyName: String) -> AnyValidation<TestedType, ValidType> {
+        return AnyValidation {
+            do {
+                return try self.validate($0)
+            } catch let error as ValidationError {
+                throw ValidationError(propertyName: propertyName, error: error)
+            }
+        }
+    }
+}
+
 // MARK: - Composed Validations
 
-extension Validation {
+extension ValidationType {
     public func flatMap<Result>(block: (ValidType) -> Result) -> AnyValidation<TestedType, Result> {
         return AnyValidation { try block(self.validate($0)) }
     }
 }
 
 infix operator >>> { associativity left }
-public func >>> <Left : Validation, Right : Validation where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
-    return AnyValidation { return try right.validate(left.validate($0)) }
+public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+    return AnyValidation { try right.validate(left.validate($0)) }
+}
+// ValidationNotNil() >>> { $0... }
+// Identical to flatMap
+public func >>> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
+    return AnyValidation { try right(left.validate($0)) }
+}
+// { $0.name } >>> ValidationNotNil()
+public func >>> <T, Right : ValidationType>(left: (T) -> Right.TestedType, right: Right) -> AnyValidation<T, Right.ValidType> {
+    return AnyValidation { try right.validate(left($0)) }
 }
 
-public func ||<Left : Validation, Right : Validation where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
     return AnyValidation {
         do {
             try left.validate($0)
@@ -63,7 +86,7 @@ public func ||<Left : Validation, Right : Validation where Left.TestedType == Ri
     }
 }
 
-public func &&<Left : Validation, Right : Validation where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+public func &&<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
     return AnyValidation {
         var errors = [ValidationError]()
         
@@ -93,21 +116,21 @@ public func &&<Left : Validation, Right : Validation where Left.TestedType == Ri
 
 // MARK: - Concrete Validations
 
-public struct ValidationSuccess<T>: Validation {
+public struct Validation<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
         return value
     }
 }
 
-public struct ValidationFailure<T>: Validation {
+public struct ValidationFailure<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
         throw ValidationError(value: value, message: "is invalid.")
     }
 }
 
-public struct ValidationNotNil<T> : Validation {
+public struct ValidationNotNil<T> : ValidationType {
     public init() { }
     public func validate(value: T?) throws -> T {
         guard let notNilValue = value else {
@@ -117,7 +140,7 @@ public struct ValidationNotNil<T> : Validation {
     }
 }
 
-public struct ValidationStringNotEmpty : Validation {
+public struct ValidationStringNotEmpty : ValidationType {
     public init() { }
     public func validate(string: String) throws -> String {
         guard string.characters.count > 0 else {
@@ -127,7 +150,7 @@ public struct ValidationStringNotEmpty : Validation {
     }
 }
 
-public struct ValidationNotEmpty<C: CollectionType>: Validation {
+public struct ValidationNotEmpty<C: CollectionType> : ValidationType {
     public init() { }
     public func validate(collection: C) throws -> C {
         guard collection.count > 0 else {
@@ -137,7 +160,7 @@ public struct ValidationNotEmpty<C: CollectionType>: Validation {
     }
 }
 
-public struct ValidationEqual<T where T: Equatable> : Validation {
+public struct ValidationEqual<T where T: Equatable> : ValidationType {
     public let target: T
     public init(_ target: T) {
         self.target = target
@@ -150,7 +173,7 @@ public struct ValidationEqual<T where T: Equatable> : Validation {
     }
 }
 
-public struct ValidationNotEqual<T where T: Equatable> : Validation {
+public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
     public let target: T
     public init(_ target: T) {
         self.target = target
@@ -163,7 +186,7 @@ public struct ValidationNotEqual<T where T: Equatable> : Validation {
     }
 }
 
-public struct ValidationRawValue<T where T: RawRepresentable> : Validation {
+public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
     public func validate(value: T.RawValue) throws -> T {
         guard let result = T(rawValue: value) else {
@@ -173,7 +196,7 @@ public struct ValidationRawValue<T where T: RawRepresentable> : Validation {
     }
 }
 
-public struct ValidationGreaterThanOrEqual<T where T: Comparable> : Validation {
+public struct ValidationGreaterThanOrEqual<T where T: Comparable> : ValidationType {
     public let minimum: T
     public init(_ minimum: T) {
         self.minimum = minimum
@@ -186,7 +209,7 @@ public struct ValidationGreaterThanOrEqual<T where T: Comparable> : Validation {
     }
 }
 
-public struct ValidationLessThanOrEqual<T where T: Comparable> : Validation {
+public struct ValidationLessThanOrEqual<T where T: Comparable> : ValidationType {
     public let maximum: T
     public init(_ maximum: T) {
         self.maximum = maximum
@@ -199,7 +222,7 @@ public struct ValidationLessThanOrEqual<T where T: Comparable> : Validation {
     }
 }
 
-public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Validation {
+public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : ValidationType {
     public let range: Range<T>
     public init(_ range: Range<T>) {
         self.range = range
@@ -212,7 +235,7 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
     }
 }
 
-public struct ValidationRegularExpression : Validation {
+public struct ValidationRegularExpression : ValidationType {
     public let regex: NSRegularExpression
     public init(_ regex: NSRegularExpression) {
         self.regex = regex
