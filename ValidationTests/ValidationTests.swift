@@ -152,7 +152,7 @@ class ValidationTests: ValidationTestCase {
     
     func testAnyValidationFromBlock() {
         let v = AnyValidation { (value: Int) -> Int in
-            guard value != 10 else { throw ValidationError(value: value, message: "should not be 10.") }
+            guard value != 10 else { throw ValidationError.Value(value: value, message: "should not be 10.") }
             return value
         }
         assertNoError() {
@@ -215,10 +215,10 @@ class ValidationTests: ValidationTestCase {
     
     func testOrValidation() {
         let v = AnyValidation { (value: String) -> Int in
-            guard value == "foo" else { throw ValidationError(value: value, message: "should be foo.") }
+            guard value == "foo" else { throw ValidationError.Value(value: value, message: "should be foo.") }
             return 1
         } || AnyValidation { (value: String) -> Bool in
-            guard value == "bar" else { throw ValidationError(value: value, message: "should be bar.") }
+            guard value == "bar" else { throw ValidationError.Value(value: value, message: "should be bar.") }
             return true
         }
         assertNoError() {
@@ -236,10 +236,10 @@ class ValidationTests: ValidationTestCase {
     
     func testAndValidation() {
         let v = AnyValidation { (value: Int) -> String in
-            guard value % 2 == 1 else { throw ValidationError(value: value, message: "should be odd.") }
+            guard value % 2 == 1 else { throw ValidationError.Value(value: value, message: "should be odd.") }
             return "foo"
         } && AnyValidation { (value: Int) -> Bool in
-            guard value <= 10 else { throw ValidationError(value: value, message: "should be less than 10.") }
+            guard value <= 10 else { throw ValidationError.Value(value: value, message: "should be less than 10.") }
             return true
         }
         assertNoError() {

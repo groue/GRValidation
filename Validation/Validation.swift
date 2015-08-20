@@ -44,7 +44,7 @@ public struct PropertyValidation<T> : ValidationType {
                 try validation.validate(propertyBlock($0))
                 return $0
             } catch let error as ValidationError {
-                throw ValidationError(propertyName: propertyName, error: error)
+                throw ValidationError.Property(owner: $0, propertyName: propertyName, error: error)
             }
         }
     }
@@ -61,7 +61,7 @@ public struct GlobalValidation<T> : ValidationType {
                 try validation.validate($0)
                 return $0
             } catch let error as ValidationError {
-                throw ValidationError(description: description, error: error)
+                throw ValidationError.Global(owner: $0, description: description, error: error)
             }
         }
     }
@@ -105,7 +105,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError(children: [leftError, rightError])
+                throw ValidationError.Multiple([leftError, rightError])
             }
         }
         
@@ -135,7 +135,7 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
         case 1:
             throw errors.first!
         default:
-            throw ValidationError(children: errors)
+            throw ValidationError.Multiple(errors)
         }
     }
 }
@@ -153,7 +153,7 @@ public struct Validation<T> : ValidationType {
 public struct ValidationFailure<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
-        throw ValidationError(value: value, message: "is invalid.")
+        throw ValidationError.Value(value: value, message: "is invalid.")
     }
 }
 
@@ -161,7 +161,7 @@ public struct ValidationNotNil<T> : ValidationType {
     public init() { }
     public func validate(value: T?) throws -> T {
         guard let notNilValue = value else {
-            throw ValidationError(value: value, message: "should not be nil.")
+            throw ValidationError.Value(value: value, message: "should not be nil.")
         }
         return notNilValue
     }
@@ -171,7 +171,7 @@ public struct ValidationStringNotEmpty : ValidationType {
     public init() { }
     public func validate(string: String) throws -> String {
         guard string.characters.count > 0 else {
-            throw ValidationError(value: string, message: "should not be empty.")
+            throw ValidationError.Value(value: string, message: "should not be empty.")
         }
         return string
     }
@@ -181,7 +181,7 @@ public struct ValidationNotEmpty<C: CollectionType> : ValidationType {
     public init() { }
     public func validate(collection: C) throws -> C {
         guard collection.count > 0 else {
-            throw ValidationError(value: collection, message: "should not be empty.")
+            throw ValidationError.Value(value: collection, message: "should not be empty.")
         }
         return collection
     }
@@ -194,7 +194,7 @@ public struct ValidationEqual<T where T: Equatable> : ValidationType {
     }
     public func validate(value: T) throws -> T {
         guard value == target else {
-            throw ValidationError(value: value, message: "should be equal to \(String(reflecting: target)).")
+            throw ValidationError.Value(value: value, message: "should be equal to \(String(reflecting: target)).")
         }
         return value
     }
@@ -207,7 +207,7 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
     }
     public func validate(value: T) throws -> T {
         guard value != target else {
-            throw ValidationError(value: value, message: "should not be equal to \(String(reflecting: target)).")
+            throw ValidationError.Value(value: value, message: "should not be equal to \(String(reflecting: target)).")
         }
         return value
     }
@@ -217,7 +217,7 @@ public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
     public func validate(value: T.RawValue) throws -> T {
         guard let result = T(rawValue: value) else {
-            throw ValidationError(value: value, message: "is invalid.")
+            throw ValidationError.Value(value: value, message: "is invalid.")
         }
         return result
     }
@@ -230,7 +230,7 @@ public struct ValidationGreaterThanOrEqual<T where T: Comparable> : ValidationTy
     }
     public func validate(value: T) throws -> T {
         guard value >= minimum else {
-            throw ValidationError(value: value, message: "should be greater or equal to \(String(reflecting: minimum)).")
+            throw ValidationError.Value(value: value, message: "should be greater or equal to \(String(reflecting: minimum)).")
         }
         return value
     }
@@ -243,7 +243,7 @@ public struct ValidationLessThanOrEqual<T where T: Comparable> : ValidationType 
     }
     public func validate(value: T) throws -> T {
         guard value <= maximum else {
-            throw ValidationError(value: value, message: "should be less or equal to \(String(reflecting: maximum)).")
+            throw ValidationError.Value(value: value, message: "should be less or equal to \(String(reflecting: maximum)).")
         }
         return value
     }
@@ -256,7 +256,7 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
     }
     public func validate(value: T) throws -> T {
         guard range ~= value else {
-            throw ValidationError(value: value, message: "should be in \(String(reflecting: range)).")
+            throw ValidationError.Value(value: value, message: "should be in \(String(reflecting: range)).")
         }
         return value
     }
@@ -274,7 +274,7 @@ public struct ValidationRegularExpression : ValidationType {
         let nsString = string as NSString
         let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
         guard match.location != NSNotFound else {
-            throw ValidationError(value: string, message: "is invalid.")
+            throw ValidationError.Value(value: string, message: "is invalid.")
         }
         return string
     }
