@@ -134,7 +134,7 @@ public struct ValidationGreaterThanOrEqual<T where T: Comparable> : Validation {
         self.minimum = minimum
     }
     public func validate(value: T) throws -> T {
-        guard value > minimum else {
+        guard value >= minimum else {
             throw ValidationError(value: value, description: "should be greater than \(minimum).")
         }
         return value
@@ -147,7 +147,7 @@ public struct ValidationLessThanOrEqual<T where T: Comparable> : Validation {
         self.maximum = maximum
     }
     public func validate(value: T) throws -> T {
-        guard value < maximum else {
+        guard value <= maximum else {
             throw ValidationError(value: value, description: "should be less than \(maximum).")
         }
         return value

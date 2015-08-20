@@ -66,6 +66,36 @@ class ValidationTests: XCTestCase {
         }
     }
     
+    func testValidationLessThanOrEqual() {
+        let v = ValidationLessThanOrEqual(2)
+        assertNoError() {
+            let result = try v.validate(1)
+            XCTAssertEqual(result, 1)
+        }
+        assertNoError() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertValidationError() {
+            try v.validate(3)
+        }
+    }
+    
+    func testValidationGreaterThanOrEqual() {
+        let v = ValidationGreaterThanOrEqual(2)
+        assertNoError() {
+            let result = try v.validate(3)
+            XCTAssertEqual(result, 3)
+        }
+        assertNoError() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertValidationError() {
+            try v.validate(1)
+        }
+    }
+    
     func testRegularExpressionValidationFromPattern() {
         let v = ValidationRegularExpression(pattern: "foo")
         assertNoError() {
