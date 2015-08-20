@@ -11,6 +11,7 @@ public struct ValidationError : ErrorType {
         case Value(value: Any?, message: String)
         case Multiple([ValidationError])
         case Property(propertyName: String, error: ValidationError)
+        case Global(description: String, error: ValidationError)
     }
     public let type: Type
     
@@ -23,6 +24,9 @@ public struct ValidationError : ErrorType {
     }
     public init(propertyName: String, error: ValidationError) {
         self.type = .Property(propertyName: propertyName, error: error)
+    }
+    public init(description: String, error: ValidationError) {
+        self.type = .Global(description: description, error: error)
     }
 }
 
@@ -45,6 +49,8 @@ extension ValidationError : CustomStringConvertible {
         case .Property(let propertyName, let error):
             let valueDescription = valueDescription ?? propertyName
             return error.description(valueDescription)
+        case .Global(let description, _):
+            return description
         }
     }
 }

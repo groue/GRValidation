@@ -34,23 +34,47 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 }
 
 
-// MARK: - Property Validations
+// MARK: - Model Validations
 
-extension ValidationType {
-    public func forPropertyName(propertyName: String) -> AnyValidation<TestedType, ValidType> {
-        return AnyValidation {
+public struct PropertyValidation<T> : ValidationType {
+    let block: (T) throws -> T
+    public init<Validation: ValidationType, PropertyType where Validation.TestedType == PropertyType>(_ propertyName: String, _ propertyBlock: (T) -> PropertyType, _ validation: Validation) {
+        self.block = {
             do {
-                return try self.validate($0)
+                try validation.validate(propertyBlock($0))
+                return $0
             } catch let error as ValidationError {
                 throw ValidationError(propertyName: propertyName, error: error)
             }
         }
     }
+    public func validate(value: T) throws -> T {
+        return try block(value)
+    }
 }
+
+public struct GlobalValidation<T> : ValidationType {
+    let block: (T) throws -> T
+    public init<Validation: ValidationType where Validation.TestedType == T>(_ description: String, _ validation: Validation) {
+        self.block = {
+            do {
+                try validation.validate($0)
+                return $0
+            } catch let error as ValidationError {
+                throw ValidationError(description: description, error: error)
+            }
+        }
+    }
+    public func validate(value: T) throws -> T {
+        return try block(value)
+    }
+}
+
 
 // MARK: - Composed Validations
 
 extension ValidationType {
+    // TODO: is it a real flatMap? Is ValidationType a Monad?
     public func flatMap<Result>(block: (ValidType) -> Result) -> AnyValidation<TestedType, Result> {
         return AnyValidation { try block(self.validate($0)) }
     }
@@ -60,11 +84,14 @@ infix operator >>> { associativity left }
 public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
+
 // ValidationNotNil() >>> { $0... }
 // Identical to flatMap
+// TODO: make a choice between operator and flatMap.
 public func >>> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
     return AnyValidation { try right(left.validate($0)) }
 }
+
 // { $0.name } >>> ValidationNotNil()
 public func >>> <T, Right : ValidationType>(left: (T) -> Right.TestedType, right: Right) -> AnyValidation<T, Right.ValidType> {
     return AnyValidation { try right.validate(left($0)) }
