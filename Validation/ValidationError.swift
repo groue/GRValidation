@@ -10,14 +10,20 @@
 A Validation Error
 */
 indirect public enum ValidationError : ErrorType {
+    
+    public enum CompoundMode {
+        case And
+        case Or
+    }
+    
     /// Error on a value
     case Value(value: Any?, message: String)
     
     /// Error on a named value
     case Named(name: String, error: ValidationError)
     
-    /// Multiple errors
-    case Multiple([ValidationError])
+    /// Compound errors
+    case Compound(mode: CompoundMode, errors: [ValidationError])
     
     /// Error with custom description
     case Global(description: String, error: ValidationError)
@@ -43,18 +49,23 @@ extension ValidationError : CustomStringConvertible {
             }
         case .Named(let name, let error):
             return error.description(name)
-        case .Multiple(let children):
-            // Avoid duplicated descriptions
-            var found = Set<String>()
-            var uniq = [String]()
-            for child in children {
-                let description = child.description(valueDescription)
-                if !found.contains(description) {
-                    uniq.append(description)
-                    found.insert(description)
+        case .Compound(let mode, let errors):
+            switch mode {
+            case .Or:
+                return errors.last!.description(valueDescription)
+            case .And:
+                // Avoid duplicated descriptions
+                var found = Set<String>()
+                var uniq = [String]()
+                for error in errors {
+                    let description = error.description(valueDescription)
+                    if !found.contains(description) {
+                        uniq.append(description)
+                        found.insert(description)
+                    }
                 }
+                return " ".join(uniq)
             }
-            return " ".join(uniq)
         case .Global(let description, _):
             return description
         case .Owned(let owner, let error):

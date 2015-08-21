@@ -174,7 +174,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError.Multiple([leftError, rightError])
+                throw ValidationError.Compound(mode: .Or, errors: [leftError, rightError])
             }
         }
         
@@ -209,7 +209,7 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
         case 1:
             throw errors.first!
         default:
-            throw ValidationError.Multiple(errors)
+            throw ValidationError.Compound(mode: .And, errors: errors)
         }
     }
 }

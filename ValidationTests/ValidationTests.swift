@@ -333,7 +333,7 @@ class ValidationTests: ValidationTestCase {
             let result = try v.validate(nil)
             XCTAssertTrue(result == nil)
         }
-        assertValidationError("\"\" should be nil. \"\" should not be empty.") {
+        assertValidationError("\"\" should not be empty.") {
             try v.validate("")
         }
     }
