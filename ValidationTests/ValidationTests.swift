@@ -281,23 +281,17 @@ class ValidationTests: ValidationTestCase {
     }
     
     func testOrValidation() {
-        let v = AnyValidation { (value: String) -> Int in
-            guard value == "foo" else { throw ValidationError.Value(value: value, message: "should be foo.") }
-            return 1
-        } || AnyValidation { (value: String) -> Bool in
-            guard value == "bar" else { throw ValidationError.Value(value: value, message: "should be bar.") }
-            return true
-        }
+        let v = ValidationNil<String>() || ValidationStringNotEmpty()
         assertValid() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
         assertValid() {
-            let result = try v.validate("bar")
-            XCTAssertEqual(result, "bar")
+            let result = try v.validate(nil)
+            XCTAssertTrue(result == nil)
         }
-        assertValidationError("\"qux\" should be foo. \"qux\" should be bar.") {
-            try v.validate("qux")
+        assertValidationError("\"\" should be nil. \"\" should not be empty.") {
+            try v.validate("")
         }
     }
     
