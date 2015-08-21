@@ -81,12 +81,22 @@ extension ValidationType {
 }
 
 infix operator >>> { associativity left precedence 130 }    // 130 > precedence of && and ||
+// V(T -> U) >>> V(U >>> V)
 public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
+// V(T -> U) >>> V(U? >>> V)
 public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
+//// T >>> V(T -> U)
+//public func >>> <Left, Right : ValidationType where Right.TestedType == Left>(left: Left, right: Right) -> AnyValidation<Void, Right.ValidType> {
+//    return AnyValidation { try right.validate(left) }
+//}
+//// T >>> V(T? -> U)
+//public func >>> <Left, Right : ValidationType where Right.TestedType == Optional<Left>>(left: Left, right: Right) -> AnyValidation<Void, Right.ValidType> {
+//    return AnyValidation { try right.validate(left) }
+//}
 
 // ValidationNotNil() >>> { $0... }
 // Identical to flatMap

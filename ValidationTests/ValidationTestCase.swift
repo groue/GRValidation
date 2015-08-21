@@ -11,7 +11,7 @@ import Validation
 
 class ValidationTestCase: XCTestCase {
 
-    func assertNoError(block: () throws -> ()) {
+    func assertValid(block: () throws -> ()) {
         do {
             try block()
         } catch {
