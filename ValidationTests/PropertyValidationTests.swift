@@ -72,6 +72,7 @@ struct ComplexModel : Validable {
         
         plan.add {
             // FIXME: the syntax is radically different than property validation.
+            // TODO: what about validating a tuple?
             let globalValidation = Validation<ComplexModel>() >>> GlobalValidation("Value1 or Value2 must be not nil.", { $0.value1 } >>> ValidationNotNil() || { $0.value2 } >>> ValidationNotNil())
             try globalValidation.validate(self)
         }

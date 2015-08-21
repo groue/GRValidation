@@ -28,7 +28,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5623D11D1B86266900130B9A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		5623D11E1B86301300130B9A /* ValidationTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTestCase.swift; sourceTree = "<group>"; };
 		56821AE91B87428500C26878 /* Validable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Validable.swift; sourceTree = "<group>"; };
 		56F4ED4F1B85CCF900DA5B88 /* Validation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Validation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,7 +63,6 @@
 		56F4ED451B85CCF900DA5B88 = {
 			isa = PBXGroup;
 			children = (
-				5623D11D1B86266900130B9A /* TODO.md */,
 				56F4ED511B85CCF900DA5B88 /* Validation */,
 				56F4ED5D1B85CCF900DA5B88 /* ValidationTests */,
 				56F4ED501B85CCF900DA5B88 /* Products */,
