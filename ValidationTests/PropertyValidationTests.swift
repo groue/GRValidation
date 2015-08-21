@@ -37,8 +37,8 @@ struct Model {
         && PropertyValidation("cardNumber", { $0.cardNumber }, cardNumberValidation)
         // TODO: Global validation should be able to be written alone, while keeping the code readable
         && GlobalValidation("Value1 or Value2 must be not nil.",
-            PropertyValidation("value1", { $0.value1 }, ValidationNotNil<Int>())
-            || PropertyValidation("value2", { $0.value2 }, ValidationNotNil<Int>()))
+            { $0.value1 } >>> ValidationNotNil<Int>()
+            || { $0.value2 } >>> ValidationNotNil<Int>())
     )
     
     func validate() throws {
