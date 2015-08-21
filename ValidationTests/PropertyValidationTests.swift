@@ -59,7 +59,6 @@ struct ComplexModel : Validable {
             .append { try validate(name, forName: "name", with: ValidationStringNotEmpty()) }
             .append { try validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
             .append { try validate(magicWord, forName: "magicWord", with: ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")) }
-            // TODO: the error description contains "cardNumber should be nil. cardNumber should contain at least 10 characters." which is confusing.
             .append { try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10)) }
             // FIXME: the syntax is somewhat different than property validation.
             // Do we have to force the user to use the `||` operator?
