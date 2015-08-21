@@ -36,6 +36,7 @@ struct IntermediateModel : Validable {
             // OK: readable enough
             // OK: phoneNumber is updated
             // OK: all errors are gathered in a single error
+            // FIXME?: ValidationPlan does not adopt ValidationType. This is because we need to mutate self.phoneNumber, and ValidationType is not allowed to perform side effects on value types.
             var plan = ValidationPlan()
             plan.add { try self.validate(self.name, forName: "name", with: ValidationStringNotEmpty()) }
             plan.add { try self.validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
