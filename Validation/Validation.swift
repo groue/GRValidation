@@ -73,13 +73,6 @@ public struct GlobalValidation<T> : ValidationType {
 
 // MARK: - Composed Validations
 
-extension ValidationType {
-    // TODO: is it a real flatMap? Is ValidationType a Monad?
-    public func flatMap<Result>(block: (ValidType) -> Result) -> AnyValidation<TestedType, Result> {
-        return AnyValidation { try block(self.validate($0)) }
-    }
-}
-
 // V(T -> U) >> V(U -> V)
 public func >> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
@@ -88,18 +81,9 @@ public func >> <Left : ValidationType, Right : ValidationType where Left.ValidTy
 public func >> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
-//// T >> V(T -> U)
-//public func >> <Left, Right : ValidationType where Right.TestedType == Left>(left: Left, right: Right) -> AnyValidation<Void, Right.ValidType> {
-//    return AnyValidation { try right.validate(left) }
-//}
-//// T >> V(T? -> U)
-//public func >> <Left, Right : ValidationType where Right.TestedType == Optional<Left>>(left: Left, right: Right) -> AnyValidation<Void, Right.ValidType> {
-//    return AnyValidation { try right.validate(left) }
-//}
 
 // ValidationNotNil() >> { $0... }
-// Identical to flatMap
-// TODO: make a choice between operator and flatMap.
+// TODO: is it a flatMap?
 public func >> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
     return AnyValidation { try right(left.validate($0)) }
 }
