@@ -87,7 +87,7 @@ class PropertyValidationTests: ValidationTestCase {
             let model = SimpleModel(name: "Arthur")
             try model.validate()
         }
-        assertValidationError("name should not be nil.", owned: true) {
+        assertValidationError("SimpleModel validation error: name should not be nil.", owned: true) {
             let model = SimpleModel(name: nil)
             try model.validate()
         }
@@ -99,7 +99,7 @@ class PropertyValidationTests: ValidationTestCase {
             try model.validate()
             XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
         }
-        assertValidationError("name should not be nil.", owned: true) {
+        assertValidationError("IntermediateModel validation error: name should not be nil.", owned: true) {
             var model = IntermediateModel(name:nil, age: 12, phoneNumber: "1 23 45 67 89")
             do {
                 try model.validate()
@@ -108,7 +108,7 @@ class PropertyValidationTests: ValidationTestCase {
                 throw error
             }
         }
-        assertValidationError("age should not be nil.", owned: true) {
+        assertValidationError("IntermediateModel validation error: age should not be nil.", owned: true) {
             var model = IntermediateModel(name:"Arthur", age: nil, phoneNumber: "1 23 45 67 89")
             do {
                 try model.validate()
@@ -117,7 +117,7 @@ class PropertyValidationTests: ValidationTestCase {
                 throw error
             }
         }
-        assertValidationError("name should not be nil. age should not be nil. phoneNumber should not be nil.") {
+        assertValidationError("IntermediateModel validation error: name should not be nil. IntermediateModel validation error: age should not be nil. IntermediateModel validation error: phoneNumber should not be nil.") {
             // TODO: test for ownership
             var model = IntermediateModel(name:nil, age: nil, phoneNumber: nil)
             try model.validate()
@@ -134,7 +134,7 @@ class PropertyValidationTests: ValidationTestCase {
             try model.validate()
         }
         // TODO: avoid duplicated error descriptions (magicWord is invalid.)
-        assertValidationError("name should not be empty. age should be greater or equal to 0. magicWord is invalid. magicWord is invalid. cardNumber should be nil. cardNumber should contain at least 10 characters. Value1 or Value2 must be not nil.") {
+        assertValidationError("ComplexModel validation error: name should not be empty. ComplexModel validation error: age should be greater or equal to 0. ComplexModel validation error: magicWord is invalid. magicWord is invalid. ComplexModel validation error: cardNumber should be nil. cardNumber should contain at least 10 characters. ComplexModel validation error: Value1 or Value2 must be not nil.") {
             // TODO: test for ownership
             let model = ComplexModel(name: "", age: -12, magicWord: "qux", cardNumber: "123", value1: nil, value2: nil)
             try model.validate()

@@ -44,8 +44,8 @@ extension ValidationError : CustomStringConvertible {
             return " ".join(children.map { $0.description(valueDescription) })
         case .Global(let description, _):
             return description
-        case .Owned(_, let error):
-            return error.description(valueDescription)
+        case .Owned(let owner, let error):
+            return "\(owner.dynamicType) validation error: \(error.description(valueDescription))"
         }
     }
 }
