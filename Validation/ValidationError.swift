@@ -7,10 +7,20 @@
 //
 
 indirect public enum ValidationError : ErrorType {
+    /// Error on a value
     case Value(value: Any?, message: String)
-    case Property(owner: Any?, propertyName: String, error: ValidationError)
-    case Global(owner: Any?, description: String, error: ValidationError)
+    
+    /// Error on a named value
+    case Named(name: String, error: ValidationError)
+    
+    /// Multiple errors
     case Multiple([ValidationError])
+    
+    /// Error with custom description
+    case Global(description: String, error: ValidationError)
+    
+    /// Owned error
+    case Owned(owner: Any, error: ValidationError)
 }
 
 extension ValidationError : CustomStringConvertible {
@@ -28,13 +38,14 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Property(_, let propertyName, let error):
-            let valueDescription = valueDescription ?? propertyName
-            return error.description(valueDescription)
-        case .Global(_, let description, _):
-            return description
+        case .Named(let name, let error):
+            return error.description(name)
         case .Multiple(let children):
             return " ".join(children.map { $0.description(valueDescription) })
+        case .Global(let description, _):
+            return description
+        case .Owned(_, let error):
+            return error.description(valueDescription)
         }
     }
 }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5623D11F1B86301300130B9A /* ValidationTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5623D11E1B86301300130B9A /* ValidationTestCase.swift */; };
+		56821AEA1B87428500C26878 /* Validable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56821AE91B87428500C26878 /* Validable.swift */; };
 		56F4ED531B85CCF900DA5B88 /* Validation.h in Headers */ = {isa = PBXBuildFile; fileRef = 56F4ED521B85CCF900DA5B88 /* Validation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		56F4ED5A1B85CCF900DA5B88 /* Validation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56F4ED4F1B85CCF900DA5B88 /* Validation.framework */; };
 		56F4ED5F1B85CCF900DA5B88 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F4ED5E1B85CCF900DA5B88 /* ValidationTests.swift */; };
@@ -29,6 +30,7 @@
 /* Begin PBXFileReference section */
 		5623D11D1B86266900130B9A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		5623D11E1B86301300130B9A /* ValidationTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTestCase.swift; sourceTree = "<group>"; };
+		56821AE91B87428500C26878 /* Validable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Validable.swift; sourceTree = "<group>"; };
 		56F4ED4F1B85CCF900DA5B88 /* Validation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Validation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		56F4ED521B85CCF900DA5B88 /* Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Validation.h; sourceTree = "<group>"; };
 		56F4ED541B85CCF900DA5B88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 			children = (
 				56F4ED521B85CCF900DA5B88 /* Validation.h */,
 				56F4ED541B85CCF900DA5B88 /* Info.plist */,
+				56821AE91B87428500C26878 /* Validable.swift */,
 				56F4ED691B85CD2800DA5B88 /* Validation.swift */,
 				56F4ED6B1B85CD3300DA5B88 /* ValidationError.swift */,
 			);
@@ -209,6 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				56F4ED6A1B85CD2800DA5B88 /* Validation.swift in Sources */,
+				56821AEA1B87428500C26878 /* Validable.swift in Sources */,
 				56F4ED6C1B85CD3300DA5B88 /* ValidationError.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

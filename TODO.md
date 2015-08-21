@@ -9,3 +9,4 @@
 - [ ] full list of validation errors for a property name
 - [X] Validate that a value may be missing (nil), but, if present, must conform to some rules.
 - [ ] Distinguish property validation error from named validation error ("User has invalid name" vs. "Name is invalid" which applies to UITextFields for example)
+- [ ] A model should be able, in the same time, to 1. store transformed properties (through a phone number validation that returns an internationally formatted phone number) 2. get a full list of validation errors on the model. Without having to write a complex do catch dance.

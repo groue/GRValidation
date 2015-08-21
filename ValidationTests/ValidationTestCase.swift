@@ -19,7 +19,7 @@ class ValidationTestCase: XCTestCase {
         }
     }
     
-    func assertValidationError(expectedErrorDescription: String, block: () throws -> ()) {
+    func assertValidationError(expectedErrorDescription: String, owned: Bool? = nil, block: () throws -> ()) {
         do {
             try block()
             XCTFail("ValidationError expected")
@@ -27,6 +27,15 @@ class ValidationTestCase: XCTestCase {
             XCTAssertEqual(error.description, expectedErrorDescription)
             if error.description != expectedErrorDescription {
                 error.description
+            }
+            
+            if let owned = owned {
+                switch error {
+                case .Owned:
+                    XCTAssertTrue(owned)
+                default:
+                    XCTAssertFalse(owned)
+                }
             }
         } catch {
             XCTFail("ValidationError expected")

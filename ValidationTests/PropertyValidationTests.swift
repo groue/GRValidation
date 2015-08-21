@@ -9,30 +9,43 @@
 import XCTest
 import Validation
 
-struct SimpleModel {
-    let name: String?
-    
-    static let validation = PropertyValidation<SimpleModel>("name", { $0.name } >> ValidationStringNotEmpty())
-    
-    func validate() throws {
-        try SimpleModel.validation.validate(self)
+// A validation that may transform its input.
+struct PhoneNumberValidation : ValidationType {
+    func validate(string: String?) throws -> String {
+        let string = try validateNotNil(string)
+        return "+33 \(string)"
     }
 }
 
-struct IntermediateModel {
+struct SimpleModel : Validable {
+    let name: String?
+    
+    func validate() throws {
+        // OK: error is named, and owned.
+        try validate(name, forName: "name", with: ValidationNotNil())
+    }
+}
+
+struct IntermediateModel : Validable {
     let name: String?
     let age: Int?
+    var phoneNumber: String?
     
-    static let nameValidation = PropertyValidation<IntermediateModel>("name", { $0.name } >> ValidationStringNotEmpty())
-    static let ageValidation = PropertyValidation<IntermediateModel>("age", { $0.age } >> ValidationRange(minimum: 0))
-    
-    func validate() throws {
-        let v = IntermediateModel.nameValidation && IntermediateModel.ageValidation
-        try v.validate(self)
+    mutating func validate() throws {
+        do {
+            // OK: readable enough
+            // OK: phoneNumber is updated
+            // OK: all errors are gathered in a single error
+            var plan = ValidationPlan()
+            plan.add { try self.validate(self.name, forName: "name", with: ValidationStringNotEmpty()) }
+            plan.add { try self.validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
+            plan.add { self.phoneNumber = try self.validate(self.phoneNumber, forName: "phoneNumber", with: PhoneNumberValidation()) }
+            try plan.validate()
+        }
     }
 }
 
-struct ComplexModel {
+struct ComplexModel : Validable {
     let name: String?
     let age: Int?
     let magicWord: String?
@@ -40,29 +53,29 @@ struct ComplexModel {
     let value1: Int?
     let value2: Int?
     
-    // Name must not be empty
-    static let nameValidation = ValidationStringNotEmpty()
-    
-    // Age >= 0
-    static let ageValidation = ValidationRange(minimum: 0)
-    
-    // Card number must be nil, or, if present, contain at least 10 characters.
-    // TODO: the error description contains "cardNumber should be nil. cardNumber should contain at least 10 characters." which is confusing.
-    static let cardNumberValidation = ValidationNil<String>() || ValidationStringLength(minimum: 10)
-    
-    // MagicWord must contain "foo" and "bar".
-    static let magicWordValidation = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
-    
-    // ComplexModel validation
-    static let validation = Validation<ComplexModel>() >> (    // This line lets PropertyValidation avoid declaring <ComplexModel> on each PropertyValidation
-        PropertyValidation("name", { $0.name } >> nameValidation)
-        && PropertyValidation("age", { $0.age } >> ageValidation)
-        && PropertyValidation("magicWord", { $0.magicWord } >> magicWordValidation)
-        && PropertyValidation("cardNumber", { $0.cardNumber } >> cardNumberValidation)
-        && GlobalValidation("Value1 or Value2 must be not nil.", { $0.value1 } >> ValidationNotNil() || { $0.value2 } >> ValidationNotNil()))
-    
     func validate() throws {
-        try ComplexModel.validation.validate(self)
+        var plan = ValidationPlan()
+        
+        // Name must not be empty
+        plan.add { try self.validate(self.name, forName: "name", with: ValidationStringNotEmpty()) }
+        
+        // Age >= 0
+        plan.add { try self.validate(self.age, forName: "age", with: ValidationRange(minimum: 0)) }
+        
+        // MagicWord must contain "foo" and "bar".
+        plan.add { try self.validate(self.magicWord, forName: "magicWord", with: ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")) }
+        
+        // Card number must be nil, or, if present, contain at least 10 characters.
+        // TODO: the error description contains "cardNumber should be nil. cardNumber should contain at least 10 characters." which is confusing.
+        plan.add { try self.validate(self.cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10)) }
+        
+        plan.add {
+            // FIXME: the syntax is radically different than property validation.
+            let globalValidation = Validation<ComplexModel>() >>> GlobalValidation("Value1 or Value2 must be not nil.", { $0.value1 } >>> ValidationNotNil() || { $0.value2 } >>> ValidationNotNil())
+            try globalValidation.validate(self)
+        }
+        
+        try plan.validate()
     }
 }
 
@@ -73,12 +86,39 @@ class PropertyValidationTests: ValidationTestCase {
             let model = SimpleModel(name: "Arthur")
             try model.validate()
         }
-        assertValidationError("name should not be nil.") {
+        assertValidationError("name should not be nil.", owned: true) {
             let model = SimpleModel(name: nil)
             try model.validate()
         }
-        assertValidationError("name should not be empty.") {
-            let model = SimpleModel(name: "")
+    }
+    
+    func testIntermediateModel() {
+        assertValid {
+            var model = IntermediateModel(name:"Arthur", age: 12, phoneNumber: "1 23 45 67 89")
+            try model.validate()
+            XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
+        }
+        assertValidationError("name should not be nil.", owned: true) {
+            var model = IntermediateModel(name:nil, age: 12, phoneNumber: "1 23 45 67 89")
+            do {
+                try model.validate()
+            } catch {
+                XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
+                throw error
+            }
+        }
+        assertValidationError("age should not be nil.", owned: true) {
+            var model = IntermediateModel(name:"Arthur", age: nil, phoneNumber: "1 23 45 67 89")
+            do {
+                try model.validate()
+            } catch {
+                XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
+                throw error
+            }
+        }
+        assertValidationError("name should not be nil. age should not be nil. phoneNumber should not be nil.") {
+            // TODO: test for ownership
+            var model = IntermediateModel(name:nil, age: nil, phoneNumber: nil)
             try model.validate()
         }
     }
@@ -94,6 +134,7 @@ class PropertyValidationTests: ValidationTestCase {
         }
         // TODO: avoid duplicated error descriptions (magicWord is invalid.)
         assertValidationError("name should not be empty. age should be greater or equal to 0. magicWord is invalid. magicWord is invalid. cardNumber should be nil. cardNumber should contain at least 10 characters. Value1 or Value2 must be not nil.") {
+            // TODO: test for ownership
             let model = ComplexModel(name: "", age: -12, magicWord: "qux", cardNumber: "123", value1: nil, value2: nil)
             try model.validate()
         }

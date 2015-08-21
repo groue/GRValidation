@@ -26,6 +26,27 @@ extension ValidationType {
     }
 }
 
+extension ValidationType {
+    func named(name: String) -> AnyValidation<TestedType, ValidType> {
+        return AnyValidation {
+            do {
+                return try self.validate($0)
+            } catch let error as ValidationError {
+                throw ValidationError.Named(name: name, error: error)
+            }
+        }
+    }
+    func owned(owner: Any) -> AnyValidation<TestedType, ValidType> {
+        return AnyValidation {
+            do {
+                return try self.validate($0)
+            } catch let error as ValidationError {
+                throw ValidationError.Owned(owner: owner, error: error)
+            }
+        }
+    }
+}
+
 /// A type-erased validation.
 public struct AnyValidation<TestedType, ValidType> : ValidationType {
     /// Wrap and forward operations to `base`.
@@ -45,36 +66,34 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 
 // MARK: - Model Validations
 
-public struct PropertyValidation<T> : ValidationType {
-    let block: (T) throws -> T
-    public init<Validation: ValidationType where Validation.TestedType == T>(_ propertyName: String, _ validation: Validation) {
+public struct PropertyValidation<TestedType, ValidType> : ValidationType {
+    let block: (TestedType) throws -> ValidType
+    public init<Validation: ValidationType where Validation.TestedType == TestedType, Validation.ValidType == ValidType>(_ propertyName: String, _ validation: Validation) {
         self.block = {
             do {
-                try validation.validate($0)
-                return $0
+                return try validation.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError.Property(owner: $0, propertyName: propertyName, error: error)
+                throw ValidationError.Owned(owner: $0, error: ValidationError.Named(name: propertyName, error: error))
             }
         }
     }
-    public func validate(value: T) throws -> T {
+    public func validate(value: TestedType) throws -> ValidType {
         return try block(value)
     }
 }
 
-public struct GlobalValidation<T> : ValidationType {
-    let block: (T) throws -> T
-    public init<Validation: ValidationType where Validation.TestedType == T>(_ description: String, _ validation: Validation) {
+public struct GlobalValidation<TestedType, ValidType> : ValidationType {
+    let block: (TestedType) throws -> ValidType
+    public init<Validation: ValidationType where Validation.TestedType == TestedType, Validation.ValidType == ValidType>(_ description: String, _ validation: Validation) {
         self.block = {
             do {
-                try validation.validate($0)
-                return $0
+                return try validation.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError.Global(owner: $0, description: description, error: error)
+                throw ValidationError.Owned(owner: $0, error: ValidationError.Global(description: description, error: error))
             }
         }
     }
-    public func validate(value: T) throws -> T {
+    public func validate(value: TestedType) throws -> ValidType {
         return try block(value)
     }
 }
@@ -82,23 +101,25 @@ public struct GlobalValidation<T> : ValidationType {
 
 // MARK: - Composed Validations
 
-// V(T -> U) >> V(U -> V)
-public func >> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+infix operator >>> { associativity left precedence 130 }
+
+// V(T -> U) >>> V(U -> V)
+public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
-// V(T -> U) >> V(U? -> V)
-public func >> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+// V(T -> U) >>> V(U? -> V)
+public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
-// ValidationNotNil() >> { $0... }
+// ValidationNotNil() >>> { $0... }
 // TODO: is it a flatMap?
-public func >> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
+public func >>> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
     return AnyValidation { try right(left.validate($0)) }
 }
 
-// { $0.name } >> ValidationNotNil()
-public func >> <T, Right : ValidationType>(left: (T) -> Right.TestedType, right: Right) -> AnyValidation<T, Right.ValidType> {
+// { $0.name } >>> ValidationNotNil()
+public func >>> <T, Right : ValidationType>(left: (T) -> Right.TestedType, right: Right) -> AnyValidation<T, Right.ValidType> {
     return AnyValidation { try right.validate(left($0)) }
 }
 
