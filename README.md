@@ -50,11 +50,11 @@ struct Person : Validable {
     let name: String?
     
     func validate() throws {
-        try validate(name, forName: "name", with: ValidationStringNotEmpty())
+        try validateProperty("name", with: name >>> ValidationStringNotEmpty())
     }
 }
 
 let person = Person(name: nil)
 try! person.validate()
-// ValidationError: Person validation error: name should not be nil.
+// ValidationError: Person validation error: name should not be empty.
 ```

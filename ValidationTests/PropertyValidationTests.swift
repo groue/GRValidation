@@ -22,7 +22,7 @@ struct SimpleModel : Validable {
     
     func validate() throws {
         // OK: error is named, and owned.
-        try validate(name, forName: "name", with: ValidationNotNil())
+        try validateProperty("name", with: name >>> ValidationNotNil())
     }
 }
 
@@ -38,9 +38,9 @@ struct IntermediateModel : Validable {
             // OK: all errors are gathered in a single error
             // FIXME?: ValidationPlan does not adopt ValidationType. This is because we need to mutate self.phoneNumber, and ValidationType is not allowed to perform side effects on value types.
             try ValidationPlan()
-                .append { try validate(name, forName: "name", with: ValidationStringNotEmpty()) }
-                .append { try validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
-                .append { phoneNumber = try validate(phoneNumber, forName: "phoneNumber", with: PhoneNumberValidation()) }
+                .append { try validateProperty("name", with: name >>> ValidationStringNotEmpty()) }
+                .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
+                .append { phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> PhoneNumberValidation()) }
                 .validate()
         }
     }
@@ -56,11 +56,10 @@ struct ComplexModel : Validable {
     
     func validate() throws {
         try ValidationPlan()
-            // TODO: { try validate(propertyNamed: "name", with: name >>> ValidationStringNotEmpty()) }
-            .append { try validate(name, forName: "name", with: ValidationStringNotEmpty()) }
-            .append { try validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
-            .append { try validate(magicWord, forName: "magicWord", with: ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")) }
-            .append { try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10)) }
+            .append { try validateProperty("name", with: name >>> ValidationStringNotEmpty()) }
+            .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
+            .append { try validateProperty("magicWord", with: magicWord >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))) }
+            .append { try validateProperty("cardNumber", with: cardNumber >>> (ValidationNil<String>() || ValidationStringLength(minimum: 10))) }
             // FIXME: the syntax is somewhat different than property validation.
             // Do we have to force the user to use the `||` operator?
             .append { try validate("Value1 or Value2 must be not nil.", with: (value1 >>> ValidationNotNil() || value2 >>> ValidationNotNil())) }

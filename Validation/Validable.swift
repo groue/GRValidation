@@ -21,8 +21,8 @@ extension Validable {
             }
         }
     */
-    public func validate<V: ValidationType>(value: V.TestedType, forName name: String, with validation: V) throws -> V.ValidType {
-        return try validation.named(name).owned(self).validate(value)
+    public func validateProperty<V: ValidationType where V.TestedType == Void>(name: String, with validation: V) throws -> V.ValidType {
+        return try validation.named(name).owned(self).validate()
     }
     
     /**
