@@ -80,8 +80,11 @@ extension ValidationType {
     }
 }
 
-infix operator >>> { associativity left }
+infix operator >>> { associativity left precedence 130 }    // 130 > precedence of && and ||
 public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+    return AnyValidation { try right.validate(left.validate($0)) }
+}
+public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
@@ -143,6 +146,13 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
 
 // MARK: - Concrete Validations
 
+// TODO: check for performance penalty using only ForwardIndexType, and see whether RandomAccessIndexType performs better.
+public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
+    case Minimum(T)
+    case Maximum(T)
+    case Range(Swift.Range<T>)
+}
+
 public struct Validation<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
@@ -154,6 +164,16 @@ public struct ValidationFailure<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
         throw ValidationError.Value(value: value, message: "is invalid.")
+    }
+}
+
+public struct ValidationNil<T> : ValidationType {
+    public init() { }
+    public func validate(value: T?) throws -> T? {
+        guard value == nil else {
+            throw ValidationError.Value(value: value, message: "should be nil.")
+        }
+        return nil
     }
 }
 
@@ -169,7 +189,10 @@ public struct ValidationNotNil<T> : ValidationType {
 
 public struct ValidationStringNotEmpty : ValidationType {
     public init() { }
-    public func validate(string: String) throws -> String {
+    public func validate(string: String?) throws -> String {
+        guard let string = string else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         guard string.characters.count > 0 else {
             throw ValidationError.Value(value: string, message: "should not be empty.")
         }
@@ -177,9 +200,46 @@ public struct ValidationStringNotEmpty : ValidationType {
     }
 }
 
+public struct ValidationStringLength : ValidationType {
+    let range: ValidRange<Int>
+    public init(minimum: Int) {
+        self.range = ValidRange.Minimum(minimum)
+    }
+    public init(maximum: Int) {
+        self.range = ValidRange.Maximum(maximum)
+    }
+    public init(range: Range<Int>) {
+        self.range = ValidRange.Range(range)
+    }
+    public func validate(string: String?) throws -> String {
+        guard let string = string else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
+        let length = string.characters.count
+        switch range {
+        case .Minimum(let minimum):
+            guard length >= minimum else {
+                throw ValidationError.Value(value: string, message: "should contain at least \(minimum) characters.")
+            }
+        case .Maximum(let maximum):
+            guard length <= maximum else {
+                throw ValidationError.Value(value: string, message: "should contain at most \(maximum) characters.")
+            }
+        case.Range(let range):
+            guard range ~= length else {
+                throw ValidationError.Value(value: string, message: "length should be in \(range).")
+            }
+        }
+        return string
+    }
+}
+
 public struct ValidationNotEmpty<C: CollectionType> : ValidationType {
     public init() { }
-    public func validate(collection: C) throws -> C {
+    public func validate(collection: C?) throws -> C {
+        guard let collection = collection else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         guard collection.count > 0 else {
             throw ValidationError.Value(value: collection, message: "should not be empty.")
         }
@@ -192,7 +252,10 @@ public struct ValidationEqual<T where T: Equatable> : ValidationType {
     public init(_ target: T) {
         self.target = target
     }
-    public func validate(value: T) throws -> T {
+    public func validate(value: T?) throws -> T {
+        guard let value = value else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         guard value == target else {
             throw ValidationError.Value(value: value, message: "should be equal to \(String(reflecting: target)).")
         }
@@ -205,7 +268,10 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
     public init(_ target: T) {
         self.target = target
     }
-    public func validate(value: T) throws -> T {
+    public func validate(value: T?) throws -> T {
+        guard let value = value else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         guard value != target else {
             throw ValidationError.Value(value: value, message: "should not be equal to \(String(reflecting: target)).")
         }
@@ -215,7 +281,10 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
 
 public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
-    public func validate(value: T.RawValue) throws -> T {
+    public func validate(value: T.RawValue?) throws -> T {
+        guard let value = value else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         guard let result = T(rawValue: value) else {
             throw ValidationError.Value(value: value, message: "is invalid.")
         }
@@ -223,40 +292,34 @@ public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     }
 }
 
-public struct ValidationGreaterThanOrEqual<T where T: Comparable> : ValidationType {
-    public let minimum: T
-    public init(_ minimum: T) {
-        self.minimum = minimum
-    }
-    public func validate(value: T) throws -> T {
-        guard value >= minimum else {
-            throw ValidationError.Value(value: value, message: "should be greater or equal to \(String(reflecting: minimum)).")
-        }
-        return value
-    }
-}
-
-public struct ValidationLessThanOrEqual<T where T: Comparable> : ValidationType {
-    public let maximum: T
-    public init(_ maximum: T) {
-        self.maximum = maximum
-    }
-    public func validate(value: T) throws -> T {
-        guard value <= maximum else {
-            throw ValidationError.Value(value: value, message: "should be less or equal to \(String(reflecting: maximum)).")
-        }
-        return value
-    }
-}
-
 public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : ValidationType {
-    public let range: Range<T>
-    public init(_ range: Range<T>) {
-        self.range = range
+    let range: ValidRange<T>
+    public init(minimum: T) {
+        self.range = ValidRange.Minimum(minimum)
     }
-    public func validate(value: T) throws -> T {
-        guard range ~= value else {
-            throw ValidationError.Value(value: value, message: "should be in \(String(reflecting: range)).")
+    public init(maximum: T) {
+        self.range = ValidRange.Maximum(maximum)
+    }
+    public init(range: Range<T>) {
+        self.range = ValidRange.Range(range)
+    }
+    public func validate(value: T?) throws -> T {
+        guard let value = value else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
+        switch range {
+        case .Minimum(let minimum):
+            guard value >= minimum else {
+                throw ValidationError.Value(value: value, message: "should be greater or equal to \(String(reflecting: minimum)).")
+            }
+        case .Maximum(let maximum):
+            guard value <= maximum else {
+                throw ValidationError.Value(value: value, message: "should be less or equal to \(String(reflecting: maximum)).")
+            }
+        case.Range(let range):
+            guard range ~= value else {
+                throw ValidationError.Value(value: value, message: "should be in \(String(reflecting: range)).")
+            }
         }
         return value
     }
@@ -270,7 +333,10 @@ public struct ValidationRegularExpression : ValidationType {
     public init(pattern: String) {
         try! self.init(NSRegularExpression(pattern: pattern, options: NSRegularExpressionOptions()))
     }
-    public func validate(string: String) throws -> String {
+    public func validate(string: String?) throws -> String {
+        guard let string = string else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
         let nsString = string as NSString
         let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
         guard match.location != NSNotFound else {

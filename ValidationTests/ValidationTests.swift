@@ -52,6 +52,9 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("[] should not be empty.") {
             try v.validate([])
         }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
     }
     
     func testValidationStringNotEmpty() {
@@ -62,6 +65,9 @@ class ValidationTests: ValidationTestCase {
         }
         assertValidationError("\"\" should not be empty.") {
             try v.validate("")
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
         }
     }
     
@@ -74,6 +80,9 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("5 is invalid.") {
             try v.validate(5)
         }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
     }
     
     func testValidationEqual() {
@@ -84,6 +93,9 @@ class ValidationTests: ValidationTestCase {
         }
         assertValidationError("2 should be equal to 1.") {
             try v.validate(2)
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
         }
     }
     
@@ -96,10 +108,13 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("1 should not be equal to 1.") {
             try v.validate(1)
         }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
     }
     
-    func testValidationLessThanOrEqual() {
-        let v = ValidationLessThanOrEqual(2)
+    func testValidationRangeWithMaximum() {
+        let v = ValidationRange(maximum: 2)
         assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
@@ -111,10 +126,13 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("3 should be less or equal to 2.") {
             try v.validate(3)
         }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
     }
     
-    func testValidationGreaterThanOrEqual() {
-        let v = ValidationGreaterThanOrEqual(2)
+    func testValidationRangeWithMinimum() {
+        let v = ValidationRange(minimum: 2)
         assertNoError() {
             let result = try v.validate(3)
             XCTAssertEqual(result, 3)
@@ -125,6 +143,30 @@ class ValidationTests: ValidationTestCase {
         }
         assertValidationError("1 should be greater or equal to 2.") {
             try v.validate(1)
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
+    }
+    
+    func testValidationRangeWithRange() {
+        let v = ValidationRange(range: 2..<4)
+        assertNoError() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertNoError() {
+            let result = try v.validate(3)
+            XCTAssertEqual(result, 3)
+        }
+        assertValidationError("1 should be in Range(2..<4).") {
+            try v.validate(1)
+        }
+        assertValidationError("4 should be in Range(2..<4).") {
+            try v.validate(4)
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
         }
     }
     
@@ -137,6 +179,9 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("\"bar\" is invalid.") {
             try v.validate("bar")
         }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
     }
     
     func testRegularExpressionValidationFromRegularExpression() {
@@ -147,6 +192,9 @@ class ValidationTests: ValidationTestCase {
         }
         assertValidationError("\"xxxfooxxx\" is invalid.") {
             try v.validate("xxxfooxxx")
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
         }
     }
     
