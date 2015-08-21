@@ -8,3 +8,4 @@
 - [X] full list of validation errors in an object ("Email is empty. Password is empty.")
 - [ ] full list of validation errors for a property name
 - [X] Validate that a value may be missing (nil), but, if present, must conform to some rules.
+- [ ] Distinguish property validation error from named validation error ("User has invalid name" vs. "Name is invalid" which applies to UITextFields for example)
