@@ -32,7 +32,7 @@ try v.validate(-1)         // ValidationError: -1 should be greater than or equa
 let v = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
 try v.validate("foobar")   // OK
 try v.validate(nil)        // ValidationError: nil is invalid.
-try v.validate("baz")      // ValidationError: "baz"" is invalid.
+try v.validate("baz")      // ValidationError: "baz" is invalid.
 
 // String that is nil, or not empty:
 let v = ValidationNil() || ValidationStringNotEmpty()
