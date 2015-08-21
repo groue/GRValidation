@@ -13,7 +13,7 @@ struct SimpleModel {
     let name: String?
     
     // TODO: this is not quite nice
-    static let validation = PropertyValidation<SimpleModel>("name", { $0.name } >>> ValidationStringNotEmpty())
+    static let validation = PropertyValidation<SimpleModel>("name", { $0.name } >> ValidationStringNotEmpty())
     
     func validate() throws {
         try SimpleModel.validation.validate(self)
@@ -42,12 +42,12 @@ struct ComplexModel {
     static let magicWordValidation = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
     
     // ComplexModel validation
-    static let validation = Validation<ComplexModel>() >>> (    // This line lets PropertyValidation avoid declaring <ComplexModel> on each PropertyValidation
-        PropertyValidation("name", { $0.name } >>> nameValidation)
-        && PropertyValidation("age", { $0.age } >>> ageValidation)
-        && PropertyValidation("magicWord", { $0.magicWord } >>> magicWordValidation)
-        && PropertyValidation("cardNumber", { $0.cardNumber } >>> cardNumberValidation)
-        && GlobalValidation("Value1 or Value2 must be not nil.", { $0.value1 } >>> ValidationNotNil() || { $0.value2 } >>> ValidationNotNil()))
+    static let validation = Validation<ComplexModel>() >> (    // This line lets PropertyValidation avoid declaring <ComplexModel> on each PropertyValidation
+        PropertyValidation("name", { $0.name } >> nameValidation)
+        && PropertyValidation("age", { $0.age } >> ageValidation)
+        && PropertyValidation("magicWord", { $0.magicWord } >> magicWordValidation)
+        && PropertyValidation("cardNumber", { $0.cardNumber } >> cardNumberValidation)
+        && GlobalValidation("Value1 or Value2 must be not nil.", { $0.value1 } >> ValidationNotNil() || { $0.value2 } >> ValidationNotNil()))
     
     func validate() throws {
         try ComplexModel.validation.validate(self)

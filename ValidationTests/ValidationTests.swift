@@ -236,7 +236,7 @@ class ValidationTests: ValidationTestCase {
     
     func testFlatMapOperator() {
         // TODO: see if syntax is nicer than testFlatMap()
-        let v = ValidationNotNil<String>() >>> { return $0.characters.count }
+        let v = ValidationNotNil<String>() >> { return $0.characters.count }
         assertValid() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, 3)
@@ -247,7 +247,7 @@ class ValidationTests: ValidationTestCase {
     }
     
     func testComposedValidation() {
-        let v = ValidationNotNil<String>() >>> ValidationStringNotEmpty()
+        let v = ValidationNotNil<String>() >> ValidationStringNotEmpty()
         assertValid() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
