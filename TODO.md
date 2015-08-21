@@ -1,10 +1,10 @@
-- [ ] validation error for values
-- [ ] validation error for object properties
-- [ ] error localization
-- [ ] custom errors
+- [X] validation error for values
+- [X] validation error for object properties
+- [X] custom validations
+- [ ] built-in error localization
 - [ ] custom localization of built-in errors
-- [ ] global validation of an object (like "Please provide a phone number or an email")
-- [ ] full list of validation errors in a value ("Value should be odd. Value should be less than 10.")
-- [ ] full list of validation errors in an object ("Email is empty. Password is empty.")
+- [X] global validation of an object (like "Please provide a phone number or an email")
+- [X] full list of validation errors in a value ("Value should be odd. Value should be less than 10.")
+- [X] full list of validation errors in an object ("Email is empty. Password is empty.")
 - [ ] full list of validation errors for a property name
-- [ ] Validate that a value may be missing (nil), but, if present, must conform to some rules.
+- [X] Validate that a value may be missing (nil), but, if present, must conform to some rules.

@@ -32,7 +32,7 @@ struct Model {
         // MagicWord must contain "foo" and "bar".
         let magicWordValidation = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
         
-        // TODO: Global validation should be able to be written alone, while keeping hte code readable
+        // TODO: Global validation should be able to be written alone, while keeping the code readable
         let value1Validation = ValidationNotNil<Int>()
         let value2Validation = ValidationNotNil<Int>()
         
@@ -52,8 +52,12 @@ struct Model {
 class PropertyValidationTests: ValidationTestCase {
     
     func testValidModel() {
-        let model = Model(name: "Arthur", age: 12, magicWord: "foobar", cardNumber: nil, value1: 1, value2: nil)
         assertNoError {
+            let model = Model(name: "Arthur", age: 12, magicWord: "foobar", cardNumber: nil, value1: 1, value2: nil)
+            try model.validate()
+        }
+        assertNoError {
+            let model = Model(name: "Arthur", age: 12, magicWord: "fooquxbar", cardNumber: "1234567890", value1: nil, value2: 2)
             try model.validate()
         }
     }
