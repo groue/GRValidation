@@ -12,11 +12,23 @@ import Validation
 struct SimpleModel {
     let name: String?
     
-    // TODO: this is not quite nice
     static let validation = PropertyValidation<SimpleModel>("name", { $0.name } >> ValidationStringNotEmpty())
     
     func validate() throws {
         try SimpleModel.validation.validate(self)
+    }
+}
+
+struct IntermediateModel {
+    let name: String?
+    let age: Int?
+    
+    static let nameValidation = PropertyValidation<IntermediateModel>("name", { $0.name } >> ValidationStringNotEmpty())
+    static let ageValidation = PropertyValidation<IntermediateModel>("age", { $0.age } >> ValidationRange(minimum: 0))
+    
+    func validate() throws {
+        let v = IntermediateModel.nameValidation && IntermediateModel.ageValidation
+        try v.validate(self)
     }
 }
 
