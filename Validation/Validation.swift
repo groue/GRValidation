@@ -306,8 +306,26 @@ public struct ValidationElementOf<T: Equatable> : ValidationType {
             return value
         }
     }
-    public func validate(value: T?) throws -> T? {
+    public func validate(value: T?) throws -> T {
         let value = try validateNotNil(value)
+        return try block(value)
+    }
+}
+
+public struct ValidationNotElementOf<T: Equatable> : ValidationType {
+    let block: (T?) throws -> T?
+    public init<C where C: CollectionType, C.Generator.Element == T>(_ collection: C) {
+        block = { (value: T?) -> T? in
+            guard let value = value else {
+                return nil
+            }
+            guard collection.indexOf(value) == nil else {
+                throw ValidationError.Value(value: value, message: "should not be in \(collection).")
+            }
+            return value
+        }
+    }
+    public func validate(value: T?) throws -> T? {
         return try block(value)
     }
 }

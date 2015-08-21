@@ -25,6 +25,9 @@ class ValidationTestCase: XCTestCase {
             XCTFail("ValidationError expected")
         } catch let error as ValidationError {
             XCTAssertEqual(error.description, expectedErrorDescription)
+            if error.description != expectedErrorDescription {
+                error.description
+            }
         } catch {
             XCTFail("ValidationError expected")
         }
