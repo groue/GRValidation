@@ -1,5 +1,5 @@
-- [X] validation error for values
-- [X] validation error for object properties
+- [X] validation of values
+- [X] validation of object properties
 - [X] custom validations
 - [ ] built-in error localization
 - [ ] custom localization of built-in errors
