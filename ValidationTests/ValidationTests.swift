@@ -46,7 +46,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("[] should not be empty.") {
             try v.validate([])
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should not be empty.") {
             try v.validate(nil)
         }
     }
@@ -60,8 +60,51 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("\"\" should not be empty.") {
             try v.validate("")
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should not be empty.") {
             try v.validate(nil)
+        }
+    }
+    
+    func testValidationTrimmedString() {
+        do {
+            let v = ValidationTrimmedString(allowEmpty: false)
+            assertValid() {
+                let result = try v.validate(" \tfoo\n")
+                XCTAssertEqual(result, "foo")
+            }
+            assertValidationError("\" \" should not be empty.") {
+                try v.validate(" ")
+            }
+            assertValidationError("nil should not be empty.") {
+                try v.validate(nil)
+            }
+        }
+        do {
+            let v = ValidationTrimmedString(allowEmpty: true)
+            assertValid() {
+                let result = try v.validate(" \tfoo\n")
+                XCTAssertEqual(result, "foo")
+            }
+            assertValid() {
+                let result = try v.validate(" ")
+                XCTAssertEqual(result, "")
+            }
+            assertValidationError("nil should not be nil.") {
+                try v.validate(nil)
+            }
+        }
+        do {
+            let v = ValidationTrimmedString(characterSet: NSCharacterSet(charactersInString: "<>"), allowEmpty: false)
+            assertValid() {
+                let result = try v.validate("< html >")
+                XCTAssertEqual(result, " html ")
+            }
+            assertValidationError("\"><<>>\" should not be empty.") {
+                try v.validate("><<>>")
+            }
+            assertValidationError("nil should not be empty.") {
+                try v.validate(nil)
+            }
         }
     }
     
@@ -79,7 +122,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("5 is invalid.") {
             try v.validate(5)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil is invalid.") {
             try v.validate(nil)
         }
     }
@@ -93,7 +136,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("2 should be equal to 1.") {
             try v.validate(2)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should be equal to 1.") {
             try v.validate(nil)
         }
     }
@@ -104,11 +147,11 @@ class ValidationTests: ValidationTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
+        assertValid() {
+            try v.validate(nil)
+        }
         assertValidationError("1 should not be equal to 1.") {
             try v.validate(1)
-        }
-        assertValidationError("nil should not be nil.") {
-            try v.validate(nil)
         }
     }
     
@@ -125,7 +168,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("3 should be in [1, 2].") {
             try v.validate(3)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should be in [1, 2].") {
             try v.validate(nil)
         }
     }
@@ -158,7 +201,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("3 should be less than or equal to 2.") {
             try v.validate(3)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should be less than or equal to 2.") {
             try v.validate(nil)
         }
     }
@@ -176,7 +219,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("1 should be greater than or equal to 2.") {
             try v.validate(1)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should be greater than or equal to 2.") {
             try v.validate(nil)
         }
     }
@@ -197,7 +240,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("4 should be in Range(2..<4).") {
             try v.validate(4)
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil should be in Range(2..<4).") {
             try v.validate(nil)
         }
     }
@@ -211,7 +254,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("\"bar\" is invalid.") {
             try v.validate("bar")
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil is invalid.") {
             try v.validate(nil)
         }
     }
@@ -225,7 +268,7 @@ class ValidationTests: ValidationTestCase {
         assertValidationError("\"xxxfooxxx\" is invalid.") {
             try v.validate("xxxfooxxx")
         }
-        assertValidationError("nil should not be nil.") {
+        assertValidationError("nil is invalid.") {
             try v.validate(nil)
         }
     }
@@ -267,7 +310,7 @@ class ValidationTests: ValidationTestCase {
     }
     
     func testComposedValidation() {
-        let v = ValidationNotNil<String>() >>> ValidationStringNotEmpty()
+        let v = ValidationNotNil() >>> ValidationStringNotEmpty()
         assertValid() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")

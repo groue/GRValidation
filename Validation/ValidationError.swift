@@ -6,6 +6,9 @@
 //  Copyright © 2015 Gwendal Roué. All rights reserved.
 //
 
+/**
+A Validation Error
+*/
 indirect public enum ValidationError : ErrorType {
     /// Error on a value
     case Value(value: Any?, message: String)
@@ -28,7 +31,7 @@ extension ValidationError : CustomStringConvertible {
         return description(nil)
     }
     
-    public func description(valueDescription: String?) -> String {
+    private func description(valueDescription: String?) -> String {
         switch self {
         case .Value(let value, let message):
             if let valueDescription = valueDescription {
@@ -41,7 +44,17 @@ extension ValidationError : CustomStringConvertible {
         case .Named(let name, let error):
             return error.description(name)
         case .Multiple(let children):
-            return " ".join(children.map { $0.description(valueDescription) })
+            // Avoid duplicated descriptions
+            var found = Set<String>()
+            var uniq = [String]()
+            for child in children {
+                let description = child.description(valueDescription)
+                if !found.contains(description) {
+                    uniq.append(description)
+                    found.insert(description)
+                }
+            }
+            return " ".join(uniq)
         case .Global(let description, _):
             return description
         case .Owned(let owner, let error):

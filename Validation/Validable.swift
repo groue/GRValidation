@@ -6,36 +6,40 @@
 //  Copyright © 2015 Gwendal Roué. All rights reserved.
 //
 
+/// A protocol for validation of complex values
 public protocol Validable {}
 
 extension Validable {
-    public func validate<TestedType, Validation: ValidationType where Validation.TestedType == TestedType>(value: TestedType, forName name: String, with validation: Validation) throws -> Validation.ValidType {
-        return try validation.named(name).owned(self).validate(value)
-    }
-}
-
-public struct ValidationPlan {
-    var validationBlocks: [() throws -> ()] = []
-    public init() { }
-    public mutating func add(block: () throws -> ()) {
-        validationBlocks.append(block)
-    }
-    public func validate() throws {
-        var validationErrors = [ValidationError]()
-        for block in validationBlocks {
-            do {
-                try block()
-            } catch let error as ValidationError {
-                validationErrors.append(error)
+    /**
+    Validates a property:
+    
+        struct Person : Validable {
+            let name: String?
+    
+            func validate() throws {
+                try validate(name, forName: "name", with: ValidationNotNil())
             }
         }
-        switch validationErrors.count {
-        case 0:
-            break
-        case 1:
-            throw validationErrors.first!
-        default:
-            throw ValidationError.Multiple(validationErrors)
+    */
+    public func validate<T, V: ValidationType where V.TestedType == T>(value: T, forName name: String, with validation: V) throws -> V.ValidType {
+        return try validation.named(name).owned(self).validate(value)
+    }
+    
+    /**
+    Validates globally:
+    
+        struct Person : Validable {
+            let firstName: String?
+            let lastName: String?
+    
+            func validate() throws {
+                try validate(
+                    "First and last name can't be both empty.",
+                    with: (firstName >>> ValidationStringNotEmpty() || lastName >>> ValidationStringNotEmpty()))
+            }
         }
+    */
+    public func validate<V: ValidationType where V.TestedType == Void>(description: String, with validation: V) throws {
+        try validation.global(description).owned(self).validate()
     }
 }

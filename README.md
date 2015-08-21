@@ -25,13 +25,13 @@ Experiments with validation in Swift 2.
 // Positive integer
 let v = ValidationRange(minimum: 0)
 try v.validate(1)          // OK
-try v.validate(nil)        // ValidationError "nil should not be nil."
+try v.validate(nil)        // ValidationError "nil should be greater than or equal to 0."
 try v.validate(-1)         // ValidationError "-1 should be greater than or equal to 0."
 
 // String that contains "foo" and "bar"
 let v = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
 try v.validate("foobar")   // OK
-try v.validate(nil)        // ValidationError "nil should not be nil."
+try v.validate(nil)        // ValidationError "nil is invalid."
 try v.validate("baz")      // ValidationError "`baz` is invalid."
 
 // String that is nil, or not empty:
@@ -49,7 +49,7 @@ struct Person : Validable {
     let name: String?
     
     func validate() throws {
-        try validate(name, forName: "name", with: ValidationNotNil())
+        try validate(name, forName: "name", with: ValidationStringNotEmpty())
     }
 }
 
