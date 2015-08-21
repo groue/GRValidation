@@ -155,7 +155,7 @@ class ValidationTests: ValidationTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValidationError("3 should be less or equal to 2.") {
+        assertValidationError("3 should be less than or equal to 2.") {
             try v.validate(3)
         }
         assertValidationError("nil should not be nil.") {
@@ -173,7 +173,7 @@ class ValidationTests: ValidationTestCase {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValidationError("1 should be greater or equal to 2.") {
+        assertValidationError("1 should be greater than or equal to 2.") {
             try v.validate(1)
         }
         assertValidationError("nil should not be nil.") {

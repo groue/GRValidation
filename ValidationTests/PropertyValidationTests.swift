@@ -134,7 +134,7 @@ class PropertyValidationTests: ValidationTestCase {
             try model.validate()
         }
         // TODO: avoid duplicated error descriptions (magicWord is invalid.)
-        assertValidationError("ComplexModel validation error: name should not be empty. ComplexModel validation error: age should be greater or equal to 0. ComplexModel validation error: magicWord is invalid. magicWord is invalid. ComplexModel validation error: cardNumber should be nil. cardNumber should contain at least 10 characters. ComplexModel validation error: Value1 or Value2 must be not nil.") {
+        assertValidationError("ComplexModel validation error: name should not be empty. ComplexModel validation error: age should be greater than or equal to 0. ComplexModel validation error: magicWord is invalid. magicWord is invalid. ComplexModel validation error: cardNumber should be nil. cardNumber should contain at least 10 characters. ComplexModel validation error: Value1 or Value2 must be not nil.") {
             // TODO: test for ownership
             let model = ComplexModel(name: "", age: -12, magicWord: "qux", cardNumber: "123", value1: nil, value2: nil)
             try model.validate()

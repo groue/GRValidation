@@ -384,11 +384,11 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
         switch range {
         case .Minimum(let minimum):
             guard value >= minimum else {
-                throw ValidationError.Value(value: value, message: "should be greater or equal to \(String(reflecting: minimum)).")
+                throw ValidationError.Value(value: value, message: "should be greater than or equal to \(String(reflecting: minimum)).")
             }
         case .Maximum(let maximum):
             guard value <= maximum else {
-                throw ValidationError.Value(value: value, message: "should be less or equal to \(String(reflecting: maximum)).")
+                throw ValidationError.Value(value: value, message: "should be less than or equal to \(String(reflecting: maximum)).")
             }
         case.Range(let range):
             guard range ~= value else {
