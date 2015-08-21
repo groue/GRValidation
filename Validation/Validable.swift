@@ -21,7 +21,7 @@ extension Validable {
             }
         }
     */
-    public func validate<T, V: ValidationType where V.TestedType == T>(value: T, forName name: String, with validation: V) throws -> V.ValidType {
+    public func validate<V: ValidationType>(value: V.TestedType, forName name: String, with validation: V) throws -> V.ValidType {
         return try validation.named(name).owned(self).validate(value)
     }
     
