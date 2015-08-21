@@ -37,8 +37,8 @@ class ValidationTests: ValidationTestCase {
         }
     }
     
-    func testValidationNotEmpty() {
-        let v = ValidationNotEmpty<[Int]>()
+    func testValidationCollectionNotEmpty() {
+        let v = ValidationCollectionNotEmpty<[Int]>()
         assertValid() {
             let result = try v.validate([1,2,3])
             XCTAssertEqual(result, [1,2,3])

@@ -227,7 +227,7 @@ public struct ValidationStringLength : ValidationType {
     }
 }
 
-public struct ValidationNotEmpty<C: CollectionType> : ValidationType {
+public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
     public init() { }
     public func validate(collection: C?) throws -> C {
         guard let collection = collection else {
