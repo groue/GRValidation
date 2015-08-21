@@ -9,27 +9,51 @@
 /**
 A Validation Error
 */
-indirect public enum ValidationError : ErrorType {
+public struct ValidationError : ErrorType {
     
-    public enum CompoundMode {
+    public init(value: Any?, message: String) {
+        self.init(.Value(value: value, message: message))
+    }
+    
+    public var owner: Any? {
+        switch type {
+        case .Owned(let owner, _):
+            return owner
+        default:
+            return nil
+        }
+    }
+    
+    
+    // not public
+    
+    enum CompoundMode {
         case And
         case Or
     }
     
-    /// Error on a value
-    case Value(value: Any?, message: String)
+    indirect enum Type {
+        /// Error on a value
+        case Value(value: Any?, message: String)
+        
+        /// Error on a named value
+        case Named(name: String, error: ValidationError)
+        
+        /// Compound errors
+        case Compound(mode: CompoundMode, errors: [ValidationError])
+        
+        /// Error with custom description
+        case Global(description: String, error: ValidationError)
+        
+        /// Owned error
+        case Owned(owner: Any, error: ValidationError)
+    }
     
-    /// Error on a named value
-    case Named(name: String, error: ValidationError)
+    let type: Type
     
-    /// Compound errors
-    case Compound(mode: CompoundMode, errors: [ValidationError])
-    
-    /// Error with custom description
-    case Global(description: String, error: ValidationError)
-    
-    /// Owned error
-    case Owned(owner: Any, error: ValidationError)
+    init(_ type: Type) {
+        self.type = type
+    }
 }
 
 extension ValidationError : CustomStringConvertible {
@@ -38,7 +62,7 @@ extension ValidationError : CustomStringConvertible {
     }
     
     private func description(valueDescription: String?) -> String {
-        switch self {
+        switch type {
         case .Value(let value, let message):
             if let valueDescription = valueDescription {
                 return "\(valueDescription) \(message)"

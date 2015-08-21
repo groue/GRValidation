@@ -30,10 +30,9 @@ class ValidationTestCase: XCTestCase {
             }
             
             if let owned = owned {
-                switch error {
-                case .Owned:
+                if error.owner != nil {
                     XCTAssertTrue(owned)
-                default:
+                } else {
                     XCTAssertFalse(owned)
                 }
             }

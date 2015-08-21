@@ -66,7 +66,7 @@ public protocol ValidationType {
 extension ValidationType {
     public func validateNotNil<T>(value: T?, message: String = ValidationNotNilFailedMessage()) throws -> T {
         guard let value = value else {
-            throw ValidationError.Value(value: nil, message: message)
+            throw ValidationError(.Value(value: nil, message: message))
         }
         return value
     }
@@ -97,7 +97,7 @@ extension ValidationType {
             do {
                 return try self.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError.Global(description: description, error: error)
+                throw ValidationError(.Global(description: description, error: error))
             }
         }
     }
@@ -106,7 +106,7 @@ extension ValidationType {
             do {
                 return try self.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError.Named(name: name, error: error)
+                throw ValidationError(.Named(name: name, error: error))
             }
         }
     }
@@ -115,7 +115,7 @@ extension ValidationType {
             do {
                 return try self.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError.Owned(owner: owner, error: error)
+                throw ValidationError(.Owned(owner: owner, error: error))
             }
         }
     }
@@ -174,7 +174,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError.Compound(mode: .Or, errors: [leftError, rightError])
+                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
             }
         }
         
@@ -209,7 +209,7 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
         case 1:
             throw errors.first!
         default:
-            throw ValidationError.Compound(mode: .And, errors: errors)
+            throw ValidationError(.Compound(mode: .And, errors: errors))
         }
     }
 }
@@ -231,7 +231,7 @@ public struct Validation<T> : ValidationType {
 public struct ValidationFailure<T> : ValidationType {
     public init() { }
     public func validate(value: T) throws -> T {
-        throw ValidationError.Value(value: value, message: ValidationFailedMessage())
+        throw ValidationError(value: value, message: ValidationFailedMessage())
     }
 }
 
@@ -240,7 +240,7 @@ public struct ValidationNil<T> : ValidationType {
     public init() { }
     public func validate(value: T?) throws -> T? {
         guard value == nil else {
-            throw ValidationError.Value(value: value, message: ValidationNilFailedMessage())
+            throw ValidationError(value: value, message: ValidationNilFailedMessage())
         }
         return nil
     }
@@ -264,7 +264,7 @@ public struct ValidationStringNotEmpty : ValidationType {
     public func validate(string: String?) throws -> String {
         let string = try validateNotNil(string, message: ValidationNotEmptyFailedMessage())
         guard string.characters.count > 0 else {
-            throw ValidationError.Value(value: string, message: ValidationNotEmptyFailedMessage())
+            throw ValidationError(value: string, message: ValidationNotEmptyFailedMessage())
         }
         return string
     }
@@ -282,7 +282,7 @@ public struct ValidationTrimmedString : ValidationType {
         var nsString = try validateNotNil(string, message: allowEmpty ? ValidationNotNilFailedMessage() : ValidationNotEmptyFailedMessage()) as NSString
         nsString = nsString.stringByTrimmingCharactersInSet(characterSet)
         guard allowEmpty || nsString.length > 0 else {
-            throw ValidationError.Value(value: string, message: ValidationNotEmptyFailedMessage())
+            throw ValidationError(value: string, message: ValidationNotEmptyFailedMessage())
         }
         return nsString as String
     }
@@ -312,19 +312,19 @@ public struct ValidationStringLength : ValidationType {
         case .Minimum(let minimum):
             let string = try validateNotNil(string, message: ValidationStringLengthMinimumFailedMessage(minimum))
             guard string.characters.count >= minimum else {
-                throw ValidationError.Value(value: string, message: ValidationStringLengthMinimumFailedMessage(minimum))
+                throw ValidationError(value: string, message: ValidationStringLengthMinimumFailedMessage(minimum))
             }
             return string
         case .Maximum(let maximum):
             let string = try validateNotNil(string, message: ValidationStringLengthMaximumFailedMessage(maximum))
             guard string.characters.count <= maximum else {
-                throw ValidationError.Value(value: string, message: ValidationStringLengthMaximumFailedMessage(maximum))
+                throw ValidationError(value: string, message: ValidationStringLengthMaximumFailedMessage(maximum))
             }
             return string
         case.Range(let range):
             let string = try validateNotNil(string, message: ValidationStringLengthRangeFailedMessage(range))
             guard range ~= string.characters.count else {
-                throw ValidationError.Value(value: string, message: ValidationStringLengthRangeFailedMessage(range))
+                throw ValidationError(value: string, message: ValidationStringLengthRangeFailedMessage(range))
             }
             return string
         }
@@ -345,7 +345,7 @@ public struct ValidationRegularExpression : ValidationType {
         let nsString = string as NSString
         let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
         guard match.location != NSNotFound else {
-            throw ValidationError.Value(value: string, message: ValidationFailedMessage())
+            throw ValidationError(value: string, message: ValidationFailedMessage())
         }
         return string
     }
@@ -360,7 +360,7 @@ public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
     public func validate(collection: C?) throws -> C {
         let collection = try validateNotNil(collection, message: ValidationNotEmptyFailedMessage())
         guard collection.count > 0 else {
-            throw ValidationError.Value(value: collection, message: ValidationNotEmptyFailedMessage())
+            throw ValidationError(value: collection, message: ValidationNotEmptyFailedMessage())
         }
         return collection
     }
@@ -378,7 +378,7 @@ public struct ValidationEqual<T where T: Equatable> : ValidationType {
     public func validate(value: T?) throws -> T {
         let value = try validateNotNil(value, message: ValidationEqualFailedMessage(target))
         guard value == target else {
-            throw ValidationError.Value(value: value, message: ValidationEqualFailedMessage(target))
+            throw ValidationError(value: value, message: ValidationEqualFailedMessage(target))
         }
         return value
     }
@@ -395,7 +395,7 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
             return nil
         }
         guard value != target else {
-            throw ValidationError.Value(value: value, message: ValidationNotEqualFailedMessage(target))
+            throw ValidationError(value: value, message: ValidationNotEqualFailedMessage(target))
         }
         return value
     }
@@ -407,10 +407,10 @@ public struct ValidationElementOf<T: Equatable> : ValidationType {
     public init<C where C: CollectionType, C.Generator.Element == T>(_ collection: C) {
         block = { (value: T?) -> T in
             guard let value = value else {
-                throw ValidationError.Value(value: nil, message: ValidationElementFailedMessage(collection))
+                throw ValidationError(value: nil, message: ValidationElementFailedMessage(collection))
             }
             guard collection.contains(value) else {
-                throw ValidationError.Value(value: value, message: ValidationElementFailedMessage(collection))
+                throw ValidationError(value: value, message: ValidationElementFailedMessage(collection))
             }
             return value
         }
@@ -429,7 +429,7 @@ public struct ValidationNotElementOf<T: Equatable> : ValidationType {
                 return nil
             }
             guard !collection.contains(value) else {
-                throw ValidationError.Value(value: value, message: ValidationNotElementFailedMessage(collection))
+                throw ValidationError(value: value, message: ValidationNotElementFailedMessage(collection))
             }
             return value
         }
@@ -448,7 +448,7 @@ public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public func validate(value: T.RawValue?) throws -> T {
         let value = try validateNotNil(value, message: ValidationFailedMessage())
         guard let result = T(rawValue: value) else {
-            throw ValidationError.Value(value: value, message: ValidationFailedMessage())
+            throw ValidationError(value: value, message: ValidationFailedMessage())
         }
         return result
     }
@@ -474,19 +474,19 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
         case .Minimum(let minimum):
             let value = try validateNotNil(value, message: ValidationMinimumFailedMessage(minimum))
             guard value >= minimum else {
-                throw ValidationError.Value(value: value, message: ValidationMinimumFailedMessage(minimum))
+                throw ValidationError(value: value, message: ValidationMinimumFailedMessage(minimum))
             }
             return value
         case .Maximum(let maximum):
             let value = try validateNotNil(value, message: ValidationMaximumFailedMessage(maximum))
             guard value <= maximum else {
-                throw ValidationError.Value(value: value, message: ValidationMaximumFailedMessage(maximum))
+                throw ValidationError(value: value, message: ValidationMaximumFailedMessage(maximum))
             }
             return value
         case.Range(let range):
             let value = try validateNotNil(value, message: ValidationRangeFailedMessage(range))
             guard range ~= value else {
-                throw ValidationError.Value(value: value, message: ValidationRangeFailedMessage(range))
+                throw ValidationError(value: value, message: ValidationRangeFailedMessage(range))
             }
             return value
         }

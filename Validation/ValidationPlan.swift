@@ -59,7 +59,7 @@ public class ValidationPlan {
         case 1:
             throw validationErrors.first!
         default:
-            throw ValidationError.Compound(mode: .And, errors: validationErrors)
+            throw ValidationError(.Compound(mode: .And, errors: validationErrors))
         }
     }
 }
