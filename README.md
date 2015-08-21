@@ -48,9 +48,14 @@ try v.validate("")         // ValidationError: "" should not be empty.
 ```swift
 struct Person : Validable {
     let name: String?
+    let phoneNumber: String?
     
     func validate() throws {
+        // Check name
         try validateProperty("name", with: name >>> ValidationStringNotEmpty())
+        
+        // Check and format phone number
+        phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> ValidationPhoneNumber(format: .International))
     }
 }
 
