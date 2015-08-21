@@ -38,7 +38,7 @@ try v.validate("baz")      // ValidationError: "baz"" is invalid.
 let v = ValidationNil() || ValidationStringNotEmpty()
 try v.validate(nil)        // OK
 try v.validate("Foo")      // OK
-try v.validate("")         // ValidationError: "" should not be empty
+try v.validate("")         // ValidationError: "" should not be empty.
 ```
 
 
@@ -55,5 +55,5 @@ struct Person : Validable {
 
 let person = Person(name: nil)
 try! person.validate()
-// ValidationError "Person validation error: name should not be nil."
+// ValidationError: Person validation error: name should not be nil.
 ```
