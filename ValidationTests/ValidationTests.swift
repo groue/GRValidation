@@ -112,6 +112,24 @@ class ValidationTests: ValidationTestCase {
         }
     }
     
+    func testValidationElementOf() {
+        let v = ValidationElementOf([1,2])
+        assertValid() {
+            let result = try v.validate(1)
+            XCTAssertEqual(result, 1)
+        }
+        assertValid() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertValidationError("3 should be in [1, 2].") {
+            try v.validate(3)
+        }
+        assertValidationError("nil should not be nil.") {
+            try v.validate(nil)
+        }
+    }
+    
     func testValidationRangeWithMaximum() {
         let v = ValidationRange(maximum: 2)
         assertValid() {

@@ -17,6 +17,15 @@ public protocol ValidationType {
     func validate(value: TestedType) throws -> ValidType
 }
 
+extension ValidationType {
+    public func validateNotNil<T>(value: T?) throws -> T {
+        guard let value = value else {
+            throw ValidationError.Value(value: nil, message: "should not be nil.")
+        }
+        return value
+    }
+}
+
 /// A type-erased validation.
 public struct AnyValidation<TestedType, ValidType> : ValidationType {
     /// Wrap and forward operations to `base`.
@@ -137,14 +146,7 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
 }
 
 
-// MARK: - Concrete Validations
-
-// TODO: check for performance penalty using only ForwardIndexType, and see whether RandomAccessIndexType performs better.
-public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
-    case Minimum(T)
-    case Maximum(T)
-    case Range(Swift.Range<T>)
-}
+// MARK: - Validations for any type
 
 public struct Validation<T> : ValidationType {
     public init() { }
@@ -173,24 +175,29 @@ public struct ValidationNil<T> : ValidationType {
 public struct ValidationNotNil<T> : ValidationType {
     public init() { }
     public func validate(value: T?) throws -> T {
-        guard let notNilValue = value else {
-            throw ValidationError.Value(value: value, message: "should not be nil.")
-        }
-        return notNilValue
+        return try validateNotNil(value)
     }
 }
+
+
+// MARK: - String Validations
 
 public struct ValidationStringNotEmpty : ValidationType {
     public init() { }
     public func validate(string: String?) throws -> String {
-        guard let string = string else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let string = try validateNotNil(string)
         guard string.characters.count > 0 else {
             throw ValidationError.Value(value: string, message: "should not be empty.")
         }
         return string
     }
+}
+
+// TODO: check for performance penalty using only ForwardIndexType, and see whether RandomAccessIndexType performs better.
+public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
+    case Minimum(T)
+    case Maximum(T)
+    case Range(Swift.Range<T>)
 }
 
 public struct ValidationStringLength : ValidationType {
@@ -205,9 +212,7 @@ public struct ValidationStringLength : ValidationType {
         self.range = ValidRange.Range(range)
     }
     public func validate(string: String?) throws -> String {
-        guard let string = string else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let string = try validateNotNil(string)
         let length = string.characters.count
         switch range {
         case .Minimum(let minimum):
@@ -227,12 +232,32 @@ public struct ValidationStringLength : ValidationType {
     }
 }
 
+public struct ValidationRegularExpression : ValidationType {
+    public let regex: NSRegularExpression
+    public init(_ regex: NSRegularExpression) {
+        self.regex = regex
+    }
+    public init(pattern: String) {
+        try! self.init(NSRegularExpression(pattern: pattern, options: NSRegularExpressionOptions()))
+    }
+    public func validate(string: String?) throws -> String {
+        let string = try validateNotNil(string)
+        let nsString = string as NSString
+        let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
+        guard match.location != NSNotFound else {
+            throw ValidationError.Value(value: string, message: "is invalid.")
+        }
+        return string
+    }
+}
+
+
+// MARK: - CollectionType Validations
+
 public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
     public init() { }
     public func validate(collection: C?) throws -> C {
-        guard let collection = collection else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let collection = try validateNotNil(collection)
         guard collection.count > 0 else {
             throw ValidationError.Value(value: collection, message: "should not be empty.")
         }
@@ -240,15 +265,16 @@ public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
     }
 }
 
+
+// MARK: - Equatable Validations
+
 public struct ValidationEqual<T where T: Equatable> : ValidationType {
     public let target: T
     public init(_ target: T) {
         self.target = target
     }
     public func validate(value: T?) throws -> T {
-        guard let value = value else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let value = try validateNotNil(value)
         guard value == target else {
             throw ValidationError.Value(value: value, message: "should be equal to \(String(reflecting: target)).")
         }
@@ -262,9 +288,7 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
         self.target = target
     }
     public func validate(value: T?) throws -> T {
-        guard let value = value else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let value = try validateNotNil(value)
         guard value != target else {
             throw ValidationError.Value(value: value, message: "should not be equal to \(String(reflecting: target)).")
         }
@@ -272,18 +296,38 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
     }
 }
 
+public struct ValidationElementOf<T: Equatable> : ValidationType {
+    let block: (T) throws -> T
+    public init<C where C: CollectionType, C.Generator.Element == T>(_ collection: C) {
+        block = { (value: T) -> T in
+            guard collection.indexOf(value) != nil else {
+                throw ValidationError.Value(value: value, message: "should be in \(collection).")
+            }
+            return value
+        }
+    }
+    public func validate(value: T?) throws -> T? {
+        let value = try validateNotNil(value)
+        return try block(value)
+    }
+}
+
+
+// MARK: - RawRepresentable Validations
+
 public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
     public func validate(value: T.RawValue?) throws -> T {
-        guard let value = value else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let value = try validateNotNil(value)
         guard let result = T(rawValue: value) else {
             throw ValidationError.Value(value: value, message: "is invalid.")
         }
         return result
     }
 }
+
+
+// MARK: - Range Validations
 
 public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : ValidationType {
     let range: ValidRange<T>
@@ -297,9 +341,7 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
         self.range = ValidRange.Range(range)
     }
     public func validate(value: T?) throws -> T {
-        guard let value = value else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
+        let value = try validateNotNil(value)
         switch range {
         case .Minimum(let minimum):
             guard value >= minimum else {
@@ -315,26 +357,5 @@ public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : Vali
             }
         }
         return value
-    }
-}
-
-public struct ValidationRegularExpression : ValidationType {
-    public let regex: NSRegularExpression
-    public init(_ regex: NSRegularExpression) {
-        self.regex = regex
-    }
-    public init(pattern: String) {
-        try! self.init(NSRegularExpression(pattern: pattern, options: NSRegularExpressionOptions()))
-    }
-    public func validate(string: String?) throws -> String {
-        guard let string = string else {
-            throw ValidationError.Value(value: nil, message: "should not be nil.")
-        }
-        let nsString = string as NSString
-        let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
-        guard match.location != NSNotFound else {
-            throw ValidationError.Value(value: string, message: "is invalid.")
-        }
-        return string
     }
 }
