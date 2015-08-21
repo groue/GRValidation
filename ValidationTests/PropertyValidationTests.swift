@@ -56,6 +56,7 @@ struct ComplexModel : Validable {
     
     func validate() throws {
         try ValidationPlan()
+            // TODO: { try validate(propertyNamed: "name", with: name >>> ValidationStringNotEmpty()) }
             .append { try validate(name, forName: "name", with: ValidationStringNotEmpty()) }
             .append { try validate(age, forName: "age", with: ValidationRange(minimum: 0)) }
             .append { try validate(magicWord, forName: "magicWord", with: ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")) }
