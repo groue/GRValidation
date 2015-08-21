@@ -27,21 +27,18 @@ let v = ValidationRange(minimum: 0)
 try v.validate(1)          // OK
 try v.validate(nil)        // ValidationError
 try v.validate(-1)         // ValidationError
-try v.validate("foo")      // Compiler error: not an Int
 
 // String that contains "foo" and "bar"
 let v = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
 try v.validate("foobar")   // OK
 try v.validate(nil)        // ValidationError
 try v.validate("baz")      // ValidationError
-try v.validate(1)          // Compiler error: not a String
 
 // String that is nil, or not empty:
 let v = ValidationNil() || ValidationStringNotEmpty()
 try v.validate(nil)        // OK
 try v.validate("Foo")      // OK
 try v.validate("")         // ValidationError
-try v.validate(1)          // Compiler error: not a String
 ```
 
 
