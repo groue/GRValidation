@@ -281,7 +281,7 @@ class ValidationTests: ValidationTestCase {
     }
     
     func testOrValidation() {
-        let v = ValidationNil<String>() || ValidationStringNotEmpty()
+        let v = ValidationNil() || ValidationStringNotEmpty()
         assertValid() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
