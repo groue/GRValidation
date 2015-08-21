@@ -31,10 +31,10 @@ struct Model {
     static let magicWordValidation = ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
     
     static let validation = Validation<Model>() >>> (
-        PropertyValidation("name", { $0.name }, nameValidation)
-        && PropertyValidation("age", { $0.age }, ageValidation)
-        && PropertyValidation("magicWord", { $0.magicWord }, magicWordValidation)
-        && PropertyValidation("cardNumber", { $0.cardNumber }, cardNumberValidation)
+        PropertyValidation("name", { $0.name } >>> nameValidation)
+        && PropertyValidation("age", { $0.age } >>> ageValidation)
+        && PropertyValidation("magicWord", { $0.magicWord } >>> magicWordValidation)
+        && PropertyValidation("cardNumber", { $0.cardNumber } >>> cardNumberValidation)
         // TODO: Global validation should be able to be written alone, while keeping the code readable
         && GlobalValidation("Value1 or Value2 must be not nil.",
             { $0.value1 } >>> ValidationNotNil<Int>()

@@ -38,10 +38,10 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 
 public struct PropertyValidation<T> : ValidationType {
     let block: (T) throws -> T
-    public init<Validation: ValidationType, PropertyType where Validation.TestedType == PropertyType>(_ propertyName: String, _ propertyBlock: (T) -> PropertyType, _ validation: Validation) {
+    public init<Validation: ValidationType where Validation.TestedType == T>(_ propertyName: String, _ validation: Validation) {
         self.block = {
             do {
-                try validation.validate(propertyBlock($0))
+                try validation.validate($0)
                 return $0
             } catch let error as ValidationError {
                 throw ValidationError.Property(owner: $0, propertyName: propertyName, error: error)
