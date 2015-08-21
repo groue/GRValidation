@@ -52,10 +52,12 @@ struct Person : Validable {
     
     func validate() throws {
         // Check name
-        try validateProperty("name", with: name >>> ValidationStringNotEmpty())
+        try validateProperty("name",
+            with: name >>> ValidationStringNotEmpty())
         
         // Check and format phone number
-        phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> ValidationPhoneNumber(format: .International))
+        phoneNumber = try validateProperty("phoneNumber",
+            with: phoneNumber >>> ValidationPhoneNumber(format: .International))
     }
 }
 
