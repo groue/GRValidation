@@ -11,6 +11,7 @@ Experiments with validation in Swift 2.
 - [ ] Built-in error localization
 - [ ] Custom localization of built-in errors
 - [X] Global validation of an object (like "Please provide a phone number or an email")
+- [ ] It is possible to identify the properties involved in a failed global validation (and, for example, select the email text field after the "Please provide a phone number or an email" error).
 - [X] Full list of validation errors in a value ("Value should be odd. Value should be less than 10.")
 - [X] Full list of validation errors in an object ("Email is empty. Password is empty.")
 - [ ] Full list of validation errors for a property name
