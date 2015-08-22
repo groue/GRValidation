@@ -232,6 +232,27 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
 /**
 Example:
 
+    name >>> ValidationNotNil() || integers >>> ValidationCollectionNotEmpty()
+*/
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+    return AnyValidation {
+        do {
+            try left.validate($0)
+            return $0
+        } catch let leftError as ValidationError {
+            do {
+                try right.validate($0)
+                return $0
+            } catch let rightError as ValidationError {
+                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+            }
+        }
+    }
+}
+
+/**
+Example:
+
     ValidationRange(minimum: 0) || ValidationNil()
 */
 public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
