@@ -1,28 +1,48 @@
 GRValidation
 ============
 
-Experiments with validation in Swift 2.
+GRValidation is a validation toolkit for Swift 2.
 
-- [X] Type safety
-- [X] Value validation
-- [X] Object property validation
-- [X] Custom validations
-- [X] Validations may transform their input
-- [ ] Built-in error localization
-- [ ] Custom localization of built-in errors
-- [X] Global validation of an object (like "Please provide a phone number or an email")
-- [ ] It is possible to identify the properties involved in a failed global validation (and, for example, select the email text field after the "Please provide a phone number or an email" error).
-- [X] Full list of validation errors in a value ("Value should be odd. Value should be less than 10.")
-- [X] Full list of validation errors in an object ("Email is empty. Password is empty.")
-- [ ] Full list of validation errors for a property name
-- [X] Validate that a value may be missing (nil), but, if present, must conform to some rules.
-- [ ] Distinguish property validation error from named validation error ("User has invalid name" vs. "Name is invalid" which applies to UITextFields for example)
-- [X] A model should be able, in the same time, to 1. store transformed properties (through a phone number validation that returns an internationally formatted phone number) 2. get a full list of validation errors on the model. Without having to write a complex do catch dance.
+It lets you validate both simple values and complex models, and won't let you down when your validations leave the trivial zone.
 
 
-## ValidationType
+Features
+--------
 
-A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
+- Type safety
+- Value validation
+- Value reparation
+- Complex model validation
+
+Missing features so far:
+
+- Localization of validation errors
+- Introspection of validation errors
+
+
+Value Validation vs. Model Validation
+-------------------------------------
+
+GRValidation distinguishes *Value Validation* from *Model Validation*.
+
+Precisely speaking, **Value Validation** throws errors like "12 should be greater than 10", and is responsible for:
+
+- **Value Checking**, as in "is this string empty?"
+- **Value Reparation**: lets check and format this phone number.
+
+Model validation, on the other side, throws errors like "name should not be empty" and provides:
+
+- **Property validation**, as in "Name should not be empty."
+- **Global validation**, as in "Please provide an email or a phone number."
+- **Mutating validations**. For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
+
+
+Those two realms are represented by the two protocols `ValidationType` and `Validable`.
+
+
+### ValidationType
+
+**ValidationType** is a protocol that checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
 
 ```swift
 public protocol ValidationType {
@@ -32,8 +52,7 @@ public protocol ValidationType {
 }
 ```
 
-
-## Value Validation
+For example:
 
 ```swift
 // Positive integer
@@ -43,26 +62,12 @@ try v.validate(nil)        // ValidationError: nil should be greater than or equ
 try v.validate(-1)         // ValidationError: -1 should be greater than or equal to 0.
 ```
 
-See the full list of [built-in validations](#built-in-validations) and the ways to [compose](#composed-validations) them.
+See the full list of [built-in Value Validations](#built-in-value-validations) and the ways to [compose](#composed-validations) them.
 
 
-## Model Validation
+### Validable
 
-**Model validation** is different from value validation:
-
-- **One needs to know which property is invalid.**
-    
-    For example: "name should not be empty."
-    
-- **One needs to validate a model as a whole.**
-    
-    For example: "Please provide an email or a phone number."
-    
-- **Validating a model may be a *mutating* operation.**
-    
-    For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
-
-Those three use cases are given by the Validable protocol:
+The **Validable** protocol provides two methods that help validating a property, or a full model as a whole:
 
 ```swift
 public protocol Validable {}
@@ -75,7 +80,7 @@ extension Validable {
 }
 ```
 
-A simple model:
+Let's start with a simple model:
 
 ```swift
 struct Person: Validable {
@@ -95,7 +100,8 @@ try person.validate()
 // Person validation error: name should not be empty.
 ```
 
-A less simple model:
+
+Feel at your ease, and don't hesitate building more complex validations:
 
 ```swift
 struct Person : Validable {
@@ -170,7 +176,8 @@ try person.validate()
 ```
 
 
-### Built-in Validations
+Built-in Value Validations
+--------------------------
 
 | Validation type              | TestedType      | ValidType       |            |
 |:---------------------------- |:--------------- |:--------------- |:---------- |
@@ -191,7 +198,8 @@ try person.validate()
 | ValidationRange              | T? where T: ForwardIndexType, T: Comparable | T | Checks that a value is not nil and in a specific range. |
 
 
-### Composed Validations
+Composed Validations
+--------------------
 
 | Operator |           |
 |:-------- |:--------- |
