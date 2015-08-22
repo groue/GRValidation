@@ -62,6 +62,18 @@ See the full list of [built-in validations](#built-in-validations) and the ways 
     
     For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
 
+Those three use cases are given by the Validable protocol:
+
+```swift
+public protocol Validable {}
+extension Validable {
+    /// Property validation. Returns the validated value:
+    public func validateProperty(name: String, with: Validation) throws -> Validation.ValidType
+    
+    /// Global validation:
+    public func validate(description: String, with: Validation) throws
+}
+```
 
 A simple model:
 
