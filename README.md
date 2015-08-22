@@ -20,6 +20,19 @@ Experiments with validation in Swift 2.
 - [X] A model should be able, in the same time, to 1. store transformed properties (through a phone number validation that returns an internationally formatted phone number) 2. get a full list of validation errors on the model. Without having to write a complex do catch dance.
 
 
+## ValidationType
+
+A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
+
+```swift
+public protocol ValidationType {
+    typealias TestedType
+    typealias ValidType
+    func validate(value: TestedType) throws -> ValidType
+}
+```
+
+
 ## Value Validation
 
 ```swift
@@ -32,6 +45,21 @@ try v.validate(-1)         // ValidationError: -1 should be greater than or equa
 
 
 ## Model Validation
+
+Model validation is different from value validation:
+
+- One needs to know which property is invalid.
+    
+    For example: "name should not be empty."
+    
+- One needs to validate a model as a whole.
+    
+    For example: "Please provide an email or a phone number."
+    
+- Validating a model may be a *mutating* operation.
+    
+    For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
+
 
 A simple model:
 
@@ -125,19 +153,6 @@ try person.validate()
 var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
 try person.validate()
 // Person validation error: email is invalid.
-```
-
-
-## ValidationType
-
-A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
-
-```swift
-public protocol ValidationType {
-    typealias TestedType
-    typealias ValidType
-    func validate(value: TestedType) throws -> ValidType
-}
 ```
 
 
