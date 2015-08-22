@@ -156,8 +156,8 @@ struct Person : Validable {
 
 var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: "0123456789  ")
 try person.validate()   // OK
-person.name!            // "Arthur" (trimmed)
-person.phoneNumber!     // "+33 1 23 45 67 89" (trimmed & formatted)
+person.name             // "Arthur" (trimmed)
+person.phoneNumber      // "+33 1 23 45 67 89" (trimmed & formatted)
 
 var person = Person(name: nil, age: nil, email: "foo@bar.com", phoneNumber: nil)
 try person.validate()
