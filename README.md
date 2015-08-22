@@ -214,7 +214,7 @@ Examples:
 // Checks that an Int is not nil and equal to 1 or 2:
 let v = ValidationEqual(1) || ValidationEqual(2)
 
-// Checks that an Int is nil, not 1, and not 2:
+// Checks that an Int is nil, or not 1, and not 2:
 let v = ValidationNotEqual(1) && ValidationNotEqual(2)
 
 // Checks that a string matches a regular expression, after trimming:
