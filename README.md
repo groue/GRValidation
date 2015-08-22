@@ -43,20 +43,22 @@ try v.validate(nil)        // ValidationError: nil should be greater than or equ
 try v.validate(-1)         // ValidationError: -1 should be greater than or equal to 0.
 ```
 
+See the full list of [Built-in validations](#built-in-validations) and the ways to [compose](#composed-validations) them.
+
 
 ## Model Validation
 
-Model validation is different from value validation:
+**Model validation** is different from value validation:
 
-- One needs to know which property is invalid.
+- **One needs to know which property is invalid.**
     
     For example: "name should not be empty."
     
-- One needs to validate a model as a whole.
+- **One needs to validate a model as a whole.**
     
     For example: "Please provide an email or a phone number."
     
-- Validating a model may be a *mutating* operation.
+- **Validating a model may be a *mutating* operation.**
     
     For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
 
@@ -177,7 +179,7 @@ try person.validate()
 | ValidationRange              | T? where T: ForwardIndexType, T: Comparable | T | Checks that a value is not nil and in a specific range. |
 
 
-### Compound Validations
+### Composed Validations
 
 | Operator |           |
 |:-------- |:--------- |
