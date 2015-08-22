@@ -125,6 +125,7 @@ try person.validate()
 var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
 try person.validate()
 // Person validation error: email is invalid.
+```
 
 
 ## ValidationType
