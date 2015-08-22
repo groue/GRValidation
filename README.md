@@ -31,7 +31,7 @@ Precisely speaking, **Value Validation** throws errors like "12 should be greate
 - **Value Reparation**: lets check and format this phone number.
 - **Composition**: several validations can be composed in a single more complex one, as in "this string should be nil, or not empty".
 
-Model validation, on the other side, throws errors like "name should not be empty" and provides:
+Model validation, on the other side, throws errors like "name should not be empty". It is built on top of value validation and provides:
 
 - **Property validation**, as in "Name should not be empty."
 - **Global validation**, as in "Please provide an email or a phone number."
