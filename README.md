@@ -28,7 +28,7 @@ GRValidation distinguishes *Value Validation* from *Model Validation*.
 Precisely speaking, **Value Validation** throws errors like "12 should be greater than 10", and is responsible for:
 
 - **Value Checking**, as in "is this string empty?"
-- **Value Reparation**: lets trim, validate, and format this user-provided phone number.
+- **Value Reparation**: for example, let's trim, validate, and format this user-provided phone number.
 - **Composition**: several validations can be composed in a single more complex one, as in "this string should be nil, or not empty".
 
 Model validation, on the other side, throws errors like "name should not be empty". It is built on top of value validation and provides:
