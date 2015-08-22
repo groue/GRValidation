@@ -43,7 +43,7 @@ try v.validate(nil)        // ValidationError: nil should be greater than or equ
 try v.validate(-1)         // ValidationError: -1 should be greater than or equal to 0.
 ```
 
-See the full list of [Built-in validations](#built-in-validations) and the ways to [compose](#composed-validations) them.
+See the full list of [built-in validations](#built-in-validations) and the ways to [compose](#composed-validations) them.
 
 
 ## Model Validation
