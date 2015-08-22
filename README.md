@@ -68,8 +68,8 @@ A validation checks a value of type TestedType, and eventually returns a value o
 
 ### Compound Validations
 
-|             |   |
-| ----------- | - |
+| Operator    |   |
+|:----------- |:- |
 | `V1 || V2`  | Checks that a value passes at least one validation. The returned value is the value returned by the first validation that passes. |
 | `V1 && V2`  | Checks that a value passes all validations. The returned value is the input value. |
 | `V1 >>> V2` | Validates the value returned by V1 with V2. Returns the value returned by V2. |
