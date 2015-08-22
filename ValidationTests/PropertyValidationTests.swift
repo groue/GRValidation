@@ -78,35 +78,45 @@ struct Person : Validable {
     var phoneNumber: String?
     
     mutating func validate() throws {
-        // Name should not be empty after whitespace trimming:
-        let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
-        name = try validateProperty(
-            "name",
-            with: name >>> nameValidation)
-        
-        // Age should be nil, or positive:
-        let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
-        try validateProperty(
-            "age",
-            with: age >>> ageValidation)
-        
-        // Email should be nil, or contain @ after whitespace trimming:
-        let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
-        email = try validateProperty(
-            "email",
-            with: email >>> emailValidation)
-        
-        // Phone number should be nil, or be a valid phone number.
-        // ValidationPhoneNumber applies international formatting.
-        let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
-        phoneNumber = try validateProperty(
-            "phoneNumber",
-            with: phoneNumber >>> phoneNumberValidation)
-        
-        // An email or a phone number is required.
-        try validate(
-            "Please provide an email or a phone number.",
-            with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
+        // ValidationPlan doesn't fail on the first validation error. Instead,
+        // it gathers all of them, and eventually throws a single ValidationError.
+        try ValidationPlan()
+            .append {
+                // Name should not be empty after whitespace trimming:
+                let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
+                name = try validateProperty(
+                    "name",
+                    with: name >>> nameValidation)
+            }
+            .append {
+                // Age should be nil, or positive:
+                let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
+                try validateProperty(
+                    "age",
+                    with: age >>> ageValidation)
+            }
+            .append {
+                // Email should be nil, or contain @ after whitespace trimming:
+                let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
+                email = try validateProperty(
+                    "email",
+                    with: email >>> emailValidation)
+            }
+            .append {
+                // Phone number should be nil, or be a valid phone number.
+                // ValidationPhoneNumber applies international formatting.
+                let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
+                phoneNumber = try validateProperty(
+                    "phoneNumber",
+                    with: phoneNumber >>> phoneNumberValidation)
+            }
+            .append {
+                // An email or a phone number is required.
+                try validate(
+                    "Please provide an email or a phone number.",
+                    with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
+            }
+            .validate()
     }
 }
 
@@ -171,12 +181,18 @@ class PropertyValidationTests: ValidationTestCase {
     }
     
     func testPerson() {
+        assertValid() {
+            var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: " 1 23 45 67 89 ")
+            try person.validate()
+            XCTAssertEqual(person.name!, "Arthur")
+            XCTAssertEqual(person.phoneNumber!, "+33 1 23 45 67 89")
+        }
         assertValidationError("Person validation error: name should not be empty.") {
-            var person = Person(name: nil, age: nil, email: nil, phoneNumber: nil)
+            var person = Person(name: nil, age: nil, email: "foo@bar.com", phoneNumber: nil)
             try person.validate()
         }
         assertValidationError("Person validation error: age should be greater than or equal to 0.") {
-            var person = Person(name: "Arthur", age: -1, email: nil, phoneNumber: nil)
+            var person = Person(name: "Arthur", age: -1, email: "foo@bar.com", phoneNumber: nil)
             try person.validate()
         }
         assertValidationError("Person validation error: Please provide an email or a phone number.") {
@@ -187,11 +203,9 @@ class PropertyValidationTests: ValidationTestCase {
             var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
             try person.validate()
         }
-        assertValid() {
-            var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: " 1 23 45 67 89 ")
+        assertValidationError("Person validation error: name should not be empty. Person validation error: Please provide an email or a phone number.") {
+            var person = Person(name: nil, age: nil, email: nil, phoneNumber: nil)
             try person.validate()
-            XCTAssertEqual(person.name!, "Arthur")
-            XCTAssertEqual(person.phoneNumber!, "+33 1 23 45 67 89")
         }
     }
 }
