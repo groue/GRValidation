@@ -87,10 +87,10 @@ struct Person: Validable {
     }
 }
 
-var person = Person(name: "Arthur")
+let person = Person(name: "Arthur")
 try person.validate()   // OK
 
-var person = Person(name: nil)
+let person = Person(name: nil)
 try person.validate()
 // Person validation error: name should not be empty.
 ```
