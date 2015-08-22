@@ -213,18 +213,10 @@ Examples:
 ```swift
 // Checks that an Int is not nil and equal to 1 or 2:
 let v = ValidationEqual(1) || ValidationEqual(2)
-v.validate(1)   // OK: 1
-v.validate(3)   // OK: 3
-v.validate(nil) // ValidationError
 
 // Checks that an Int is nil, not 1, and not 2:
 let v = ValidationNotEqual(1) && ValidationNotEqual(2)
-v.validate(3)   // OK: 3
-v.validate(nil) // OK: nil
-v.validate(1)   // ValidationError
 
 // Checks that a string matches a regular expression, after trimming:
 let v = ValidationTrim() >>> ValidationRegularExpression(pattern: "^a+$")
-v.validate(" aaa ") // OK: "aaa"
 ```
-
