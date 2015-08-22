@@ -204,7 +204,7 @@ Composed Validations
 
 | Operator |           |
 |:-------- |:--------- |
-| `||`     | Returns the value returned by the first validation that passes, or the input value when validations types don't match. |
+| `||`     | Returns the value returned by the first validation that passes, or the input value when output types don't match. |
 | `&&`     | Checks that a value passes all validations. The returned value is the input value. |
 | `>>>`    | Chains two validations. Returns the value returned by the right validation. |
 
