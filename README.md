@@ -34,7 +34,7 @@ Model validation, on the other side, throws errors like "name should not be empt
 
 - **Property validation**, as in "Name should not be empty."
 - **Global validation**, as in "Please provide an email or a phone number."
-- **Mutating validations**. For example, if a person's name must not be empty after whitespace trimming, one wants to update the name with the validated trimmed input.
+- **Mutating validations**. For example, after successful validation of a user-provided phone number, one wants to update it with its formatted version.
 
 
 Those two realms are represented by the two protocols `ValidationType` and `Validable`.
