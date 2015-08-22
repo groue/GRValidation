@@ -130,7 +130,7 @@ try person.validate()
 
 ## ValidationType
 
-The ValidationType protocol defines a validation:
+A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
 
 ```swift
 public protocol ValidationType {
@@ -139,8 +139,6 @@ public protocol ValidationType {
     func validate(value: TestedType) throws -> ValidType
 }
 ```
-
-A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError.
 
 
 ### Built-in Validations
