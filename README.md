@@ -70,7 +70,7 @@ A validation checks a value of type TestedType, and eventually returns a value o
 
 | Operator |           |
 |:-------- |:--------- |
-| `||`     | Checks that a value passes at least one validation. The returned value is the value returned by the first validation that passes. |
+| `||`     | Returns the value returned by the first validation that passes. |
 | `&&`     | Checks that a value passes all validations. The returned value is the input value. |
 | `>>>`    | Chains two validations. Returns the value returned by the right validation. |
 
