@@ -58,9 +58,9 @@ For example:
 ```swift
 // Positive integer
 let v = ValidationRange(minimum: 0)
-try v.validate(1)          // OK
-try v.validate(nil)        // ValidationError: nil should be greater than or equal to 0.
-try v.validate(-1)         // ValidationError: -1 should be greater than or equal to 0.
+try v.validate(1)   // OK
+try v.validate(nil) // ValidationError: nil should be greater than or equal to 0.
+try v.validate(-1)  // ValidationError: -1 should be greater than or equal to 0.
 ```
 
 See the full list of [built-in Value Validations](#built-in-value-validations) and the ways to [compose](#composed-validations) them.
