@@ -194,7 +194,26 @@ public func >>> <T, Right : ValidationType where Right.TestedType == T>(left: T,
 /**
 Example:
 
-    try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10))
+    ValidationNil<String>() || ValidationStringLength(minimum: 1)
+*/
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Right.ValidType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
+    return AnyValidation {
+        do {
+            return try left.validate($0)
+        } catch let leftError as ValidationError {
+            do {
+                return try right.validate($0)
+            } catch let rightError as ValidationError {
+                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+            }
+        }
+    }
+}
+
+/**
+Example:
+
+    ValidationNil() || ValidationRange(minimum: 0)
 */
 public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Optional<Right.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
     return AnyValidation {
@@ -209,12 +228,13 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
         }
     }
 }
+
 /**
 Example:
 
-try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10))
+    ValidationRange(minimum: 0) || ValidationNil()
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Right.ValidType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation {
         do {
             return try left.validate($0)
