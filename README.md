@@ -89,9 +89,23 @@ struct Person : Validable {
     }
 }
 
-let person = Person(name: nil, phoneNumber: "don't call me")
+var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: "0123456789  ")
+try person.validate()   // OK
+person.name!            // "Arthur" (trimmed)
+person.phoneNumber!     // "+33 1 23 45 67 89" (trimmed & formatted)
+
+var person = Person(name: nil, age: nil, email: nil, phoneNumber: nil)
 try person.validate()
-// ValidationError: Person validation error: name should not be empty.
-try person.validateAll()
-// ValidationError: Person validation error: name should not be empty. phoneNumber is invalid.
-```
+// Person validation error: name should not be empty.
+
+var person = Person(name: "Arthur", age: -1, email: nil, phoneNumber: nil)
+try person.validate()
+// Person validation error: age should be greater than or equal to 0.
+
+var person = Person(name: "Arthur", age: 35, email: nil, phoneNumber: nil)
+try person.validate()
+// Person validation error: Please provide an email or a phone number.
+
+var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
+try person.validate()
+// Person validation error: email is invalid.
