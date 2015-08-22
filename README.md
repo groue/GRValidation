@@ -72,7 +72,7 @@ A validation checks a value of type TestedType, and eventually returns a value o
 |:-------- |:--------- |
 | `||`     | Checks that a value passes at least one validation. The returned value is the value returned by the first validation that passes. |
 | `&&`     | Checks that a value passes all validations. The returned value is the input value. |
-| `>>>`    | Validates the value returned by V1 with V2. Returns the value returned by V2. |
+| `>>>`    | Chains two validations. Returns the value returned by the right validation. |
 
 Examples:
 
