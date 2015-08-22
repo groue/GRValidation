@@ -23,6 +23,9 @@ public func ValidationNilFailedMessage() -> String {
 public func ValidationNotEmptyFailedMessage() -> String {
     return "should not be empty."
 }
+public func ValidationEmptyFailedMessage() -> String {
+    return "should be empty."
+}
 public func ValidationEqualFailedMessage<T: Equatable>(value: T) -> String {
     return "should be equal to \(String(reflecting: value))."
 }
@@ -30,10 +33,21 @@ public func ValidationNotEqualFailedMessage<T: Equatable>(value: T) -> String {
     return "should not be equal to \(String(reflecting: value))."
 }
 public func ValidationStringLengthMinimumFailedMessage(length: Int) -> String {
-    return "should contain at least \(length) characters."
+    if length == 1 {
+        return ValidationNotEmptyFailedMessage()
+    } else {
+        return "should contain at least \(length) characters."
+    }
 }
 public func ValidationStringLengthMaximumFailedMessage(length: Int) -> String {
-    return "should contain at most \(length) characters."
+    switch length {
+    case 0:
+        return ValidationEmptyFailedMessage()
+    case 1:
+        return "should contain at most \(length) character."
+    default:
+        return "should contain at most \(length) characters."
+    }
 }
 public func ValidationStringLengthRangeFailedMessage(range: Range<Int>) -> String {
     return "length should be in \(range)."
@@ -166,19 +180,35 @@ Example:
 
     try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10))
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Optional<Right.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
     return AnyValidation {
         do {
-            try left.validate($0)
+            return try left.validate($0)
         } catch let leftError as ValidationError {
             do {
-                try right.validate($0)
+                return try right.validate($0)
             } catch let rightError as ValidationError {
                 throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
             }
         }
-        
-        return $0
+    }
+}
+/**
+Example:
+
+try validate(cardNumber, forName: "cardNumber", with: ValidationNil<String>() || ValidationStringLength(minimum: 10))
+*/
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Right.ValidType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
+    return AnyValidation {
+        do {
+            return try left.validate($0)
+        } catch let leftError as ValidationError {
+            do {
+                return try right.validate($0)
+            } catch let rightError as ValidationError {
+                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+            }
+        }
     }
 }
 
@@ -258,36 +288,6 @@ public struct ValidationNotNil<T> : ValidationType {
 
 // MARK: - String Validations
 
-/// Validates that the tested string is not empty.
-public struct ValidationStringNotEmpty : ValidationType {
-    public init() { }
-    public func validate(string: String?) throws -> String {
-        let string = try validateNotNil(string, message: ValidationNotEmptyFailedMessage())
-        guard string.characters.count > 0 else {
-            throw ValidationError(value: string, message: ValidationNotEmptyFailedMessage())
-        }
-        return string
-    }
-}
-
-/// Returns a trimmed string, optionally validating that it is not empty.
-public struct ValidationTrimmedString : ValidationType {
-    public let characterSet: NSCharacterSet
-    public let allowEmpty: Bool
-    public init(characterSet: NSCharacterSet = NSCharacterSet.whitespaceAndNewlineCharacterSet(), allowEmpty: Bool) {
-        self.characterSet = characterSet
-        self.allowEmpty = allowEmpty
-    }
-    public func validate(string: String?) throws -> String {
-        var nsString = try validateNotNil(string, message: allowEmpty ? ValidationNotNilFailedMessage() : ValidationNotEmptyFailedMessage()) as NSString
-        nsString = nsString.stringByTrimmingCharactersInSet(characterSet)
-        guard allowEmpty || nsString.length > 0 else {
-            throw ValidationError(value: string, message: ValidationNotEmptyFailedMessage())
-        }
-        return nsString as String
-    }
-}
-
 // TODO: check for performance penalty using only ForwardIndexType, and see whether RandomAccessIndexType performs better.
 public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
     case Minimum(T)
@@ -295,19 +295,40 @@ public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
     case Range(Swift.Range<T>)
 }
 
-/// Validates the length of the tested string.
+/// Validation that always pass.
+public struct ValidationTrim: ValidationType {
+    let characterSet: NSCharacterSet
+    public init(characterSet: NSCharacterSet = NSCharacterSet.whitespaceAndNewlineCharacterSet()) {
+        self.characterSet = characterSet
+    }
+    public func validate(string: String?) throws -> String? {
+        guard let string = string else {
+            return nil
+        }
+        return (string as NSString).stringByTrimmingCharactersInSet(characterSet)
+    }
+}
+
+/// Validates the length of the tested string, with optional trimming
 public struct ValidationStringLength : ValidationType {
     let range: ValidRange<Int>
-    public init(minimum: Int) {
+    let allowNil: Bool
+    public init(minimum: Int, allowNil: Bool = false) {
         self.range = ValidRange.Minimum(minimum)
+        self.allowNil = allowNil
     }
-    public init(maximum: Int) {
+    public init(maximum: Int, allowNil: Bool = false) {
         self.range = ValidRange.Maximum(maximum)
+        self.allowNil = allowNil
     }
-    public init(range: Range<Int>) {
+    public init(range: Range<Int>, allowNil: Bool = false) {
         self.range = ValidRange.Range(range)
+        self.allowNil = allowNil
     }
-    public func validate(string: String?) throws -> String {
+    public func validate(string: String?) throws -> String? {
+        if string == nil && allowNil {
+            return nil
+        }
         switch range {
         case .Minimum(let minimum):
             let string = try validateNotNil(string, message: ValidationStringLengthMinimumFailedMessage(minimum))
@@ -361,6 +382,20 @@ public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
         let collection = try validateNotNil(collection, message: ValidationNotEmptyFailedMessage())
         guard collection.count > 0 else {
             throw ValidationError(value: collection, message: ValidationNotEmptyFailedMessage())
+        }
+        return collection
+    }
+}
+
+/// Validates that the tested collection is nil or empty.
+public struct ValidationCollectionEmpty<C: CollectionType> : ValidationType {
+    public init() { }
+    public func validate(collection: C?) throws -> C? {
+        guard let collection = collection else {
+            return nil
+        }
+        guard collection.count == 0 else {
+            throw ValidationError(value: collection, message: ValidationEmptyFailedMessage())
         }
         return collection
     }

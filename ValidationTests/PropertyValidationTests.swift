@@ -10,7 +10,11 @@ import XCTest
 import Validation
 
 // A validation that may transform its input.
-struct PhoneNumberValidation : ValidationType {
+struct ValidationPhoneNumber : ValidationType {
+    enum Format {
+        case International
+    }
+    init(format: Format) { }
     func validate(string: String?) throws -> String {
         let string = try validateNotNil(string)
         return "+33 \(string)"
@@ -38,9 +42,9 @@ struct IntermediateModel : Validable {
             // OK: all errors are gathered in a single error
             // FIXME?: ValidationPlan does not adopt ValidationType. This is because we need to mutate self.phoneNumber, and ValidationType is not allowed to perform side effects on value types.
             try ValidationPlan()
-                .append { try validateProperty("name", with: name >>> ValidationStringNotEmpty()) }
+                .append { try validateProperty("name", with: name >>> ValidationStringLength(minimum: 1)) }
                 .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
-                .append { phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> PhoneNumberValidation()) }
+                .append { phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> ValidationPhoneNumber(format: .International)) }
                 .validate()
         }
     }
@@ -56,7 +60,7 @@ struct ComplexModel : Validable {
     
     func validate() throws {
         try ValidationPlan()
-            .append { try validateProperty("name", with: name >>> ValidationStringNotEmpty()) }
+            .append { try validateProperty("name", with: name >>> ValidationStringLength(minimum: 1)) }
             .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
             .append { try validateProperty("magicWord", with: magicWord >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))) }
             .append { try validateProperty("cardNumber", with: cardNumber >>> (ValidationNil<String>() || ValidationStringLength(minimum: 10))) }
@@ -64,6 +68,45 @@ struct ComplexModel : Validable {
             // Do we have to force the user to use the `||` operator?
             .append { try validate("Value1 or Value2 must be not nil.", with: (value1 >>> ValidationNotNil() || value2 >>> ValidationNotNil())) }
             .validate()
+    }
+}
+
+struct Person : Validable {
+    var name: String?
+    var age: Int?
+    var email: String?
+    var phoneNumber: String?
+    
+    mutating func validate() throws {
+        // Name should not be empty after whitespace trimming:
+        let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
+        name = try validateProperty(
+            "name",
+            with: name >>> nameValidation)
+        
+        // Age should be nil, or positive:
+        let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
+        try validateProperty(
+            "age",
+            with: age >>> ageValidation)
+        
+        // Email should be nil, or contain @ after whitespace trimming:
+        let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
+        email = try validateProperty(
+            "email",
+            with: email >>> emailValidation)
+        
+        // Phone number should be nil, or be a valid phone number.
+        // ValidationPhoneNumber applies international formatting.
+        let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
+        phoneNumber = try validateProperty(
+            "phoneNumber",
+            with: phoneNumber >>> phoneNumberValidation)
+        
+        // An email or a phone number is required.
+        try validate(
+            "Please provide an email or a phone number.",
+            with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
     }
 }
 
@@ -124,6 +167,31 @@ class PropertyValidationTests: ValidationTestCase {
             // TODO: test for ownership
             let model = ComplexModel(name: "", age: -12, magicWord: "qux", cardNumber: "123", value1: nil, value2: nil)
             try model.validate()
+        }
+    }
+    
+    func testPerson() {
+        assertValidationError("Person validation error: name should not be empty.") {
+            var person = Person(name: nil, age: nil, email: nil, phoneNumber: nil)
+            try person.validate()
+        }
+        assertValidationError("Person validation error: age should be greater than or equal to 0.") {
+            var person = Person(name: "Arthur", age: -1, email: nil, phoneNumber: nil)
+            try person.validate()
+        }
+        assertValidationError("Person validation error: Please provide an email or a phone number.") {
+            var person = Person(name: "Arthur", age: 35, email: nil, phoneNumber: nil)
+            try person.validate()
+        }
+        assertValidationError("Person validation error: email is invalid.") {
+            var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
+            try person.validate()
+        }
+        assertValid() {
+            var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: " 1 23 45 67 89 ")
+            try person.validate()
+            XCTAssertEqual(person.name!, "Arthur")
+            XCTAssertEqual(person.phoneNumber!, "+33 1 23 45 67 89")
         }
     }
 }

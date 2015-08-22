@@ -40,6 +40,10 @@ let v = ValidationNil() || ValidationStringNotEmpty()
 try v.validate(nil)        // OK
 try v.validate("Foo")      // OK
 try v.validate("")         // ValidationError: "" should not be empty.
+
+// Phone number
+let v = ValidationPhoneNumber(format: .International)   //
+let validPhoneNumber = try v.validate("044 668 18 00")
 ```
 
 
@@ -47,21 +51,47 @@ try v.validate("")         // ValidationError: "" should not be empty.
 
 ```swift
 struct Person : Validable {
-    let name: String?
-    let phoneNumber: String?
+    var name: String?
+    var age: Int?
+    var email: String?
+    var phoneNumber: String?
     
-    func validate() throws {
-        // Check name
-        try validateProperty("name",
-            with: name >>> ValidationStringNotEmpty())
+    mutating func validate() throws {
+        // Name should not be empty after whitespace trimming:
+        let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
+        name = try validateProperty(
+            "name",
+            with: name >>> nameValidation)
         
-        // Check and format phone number
-        phoneNumber = try validateProperty("phoneNumber",
-            with: phoneNumber >>> ValidationPhoneNumber(format: .International))
+        // Age should be nil, or positive:
+        let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
+        try validateProperty(
+            "age",
+            with: age >>> ageValidation)
+        
+        // Email should be nil, or contain @ after whitespace trimming:
+        let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
+        email = try validateProperty(
+            "email",
+            with: email >>> emailValidation)
+        
+        // Phone number should be nil, or be a valid phone number.
+        // ValidationPhoneNumber applies international formatting.
+        let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
+        phoneNumber = try validateProperty(
+            "phoneNumber",
+            with: phoneNumber >>> phoneNumberValidation)
+        
+        // An email or a phone number is required.
+        try validate(
+            "Please provide an email or a phone number.",
+            with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
     }
 }
 
-let person = Person(name: nil)
-try! person.validate()
+let person = Person(name: nil, phoneNumber: "don't call me")
+try person.validate()
 // ValidationError: Person validation error: name should not be empty.
+try person.validateAll()
+// ValidationError: Person validation error: name should not be empty. phoneNumber is invalid.
 ```
