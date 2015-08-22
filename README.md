@@ -20,7 +20,7 @@ Experiments with validation in Swift 2.
 - [X] A model should be able, in the same time, to 1. store transformed properties (through a phone number validation that returns an internationally formatted phone number) 2. get a full list of validation errors on the model. Without having to write a complex do catch dance.
 
 
-## Value validation
+## Value Validation
 
 ```swift
 // Positive integer
@@ -46,8 +46,7 @@ let v = ValidationPhoneNumber(format: .International)   //
 let validPhoneNumber = try v.validate("044 668 18 00")
 ```
 
-
-## Model validation
+## Model Validation
 
 A simple model:
 
@@ -121,7 +120,6 @@ struct Person : Validable {
     }
 }
 
-
 var person = Person(name: " Arthur ", age: 35, email: nil, phoneNumber: "0123456789  ")
 try person.validate()   // OK
 person.name!            // "Arthur" (trimmed)
@@ -142,3 +140,68 @@ try person.validate()
 var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
 try person.validate()
 // Person validation error: email is invalid.
+
+
+## ValidationType
+
+The ValidationType protocol defines a validation:
+
+```swift
+public protocol ValidationType {
+    typealias TestedType
+    typealias ValidType
+    func validate(value: TestedType) throws -> ValidType
+}
+```
+
+A validation checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError.
+
+
+### Built-in Validations
+
+| Validation type              | TestedType      | ValidType       |            |
+| ---------------------------- | --------------- | --------------- | ---------- |
+| Validation                   | T               | T               | All values pass. |
+| ValidationFailure            | T               | T               | All values fail. |
+| ValidationNil                | T?              | T?              | Checks that input is nil. |
+| ValidationNotNil             | T?              | T               | Checks that input is not nil. |
+| ValidationTrim               | String?         | String?         | All strings pass. Non nil strings are trimmed. |
+| ValidationStringLength       | String?         | String          | Checks that a string is not nil and has length in a specific range. |
+| ValidationRegularExpression  | String?         | String          | Checks that a string is not nil and matches a regular expression. |
+| ValidationCollectionNotEmpty | CollectionType? | CollectionType  | Checks that a collection is not nil and not empty. |
+| ValidationCollectionEmpty    | CollectionType? | CollectionType? | Checks that a collection is nil or empty. |
+| ValidationEqual              | T? where T:Equatable | T          | Checks that a value is not nil and equal to a reference value. |
+| ValidationNotEqual           | T? where T:Equatable | T?         | Checks that a value is nil or not equal to a reference value. |
+| ValidationElementOf          | T? where T:Equatable | T          | Checks that a value is not nil and member of a reference collection. |
+| ValidationNotElementOf       | T? where T:Equatable | T?         | Checks that a value is nil or not member of a reference collection. |
+| ValidationRawValue           | T.RawValue? where T: RawRepresentable | T | Checks that a value is not nil and a valid raw value for type T. |
+| ValidationRange              | T? where T: ForwardIndexType, T: Comparable | T | Checks that a value is not nil and in a specific range. |
+
+
+### Compound Validations
+
+|             |   |
+| ----------- | - |
+| `V1 || V2`  | Checks that a value passes at least one validation. The returned value is the value returned by the first validation that passes. |
+| `V1 && V2`  | Checks that a value passes all validations. The returned value is the input value. |
+| `V1 >>> V2` | Validates the value returned by V1 with V2. Returns the value returned by V2. |
+
+Examples:
+
+```swift
+// Checks that an Int is not nil and equal to 1 or 2:
+let v = ValidationEqual(1) || ValidationEqual(2)
+v.validate(1)   // OK: 1
+v.validate(3)   // OK: 3
+v.validate(nil) // ValidationError
+
+// Checks that an Int is nil, not 1, and not 2:
+let v = ValidationNotEqual(1) && ValidationNotEqual(2)
+v.validate(3)   // OK: 3
+v.validate(nil) // OK: nil
+v.validate(1)   // ValidationError
+
+// Checks that a string matches a regular expression, after trimming:
+let v = ValidationTrim() >>> ValidationRegularExpression(pattern: "^a+$")
+v.validate(" aaa ") // OK: "aaa"
+```

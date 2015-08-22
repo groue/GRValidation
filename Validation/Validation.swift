@@ -312,23 +312,16 @@ public struct ValidationTrim: ValidationType {
 /// Validates the length of the tested string, with optional trimming
 public struct ValidationStringLength : ValidationType {
     let range: ValidRange<Int>
-    let allowNil: Bool
-    public init(minimum: Int, allowNil: Bool = false) {
+    public init(minimum: Int) {
         self.range = ValidRange.Minimum(minimum)
-        self.allowNil = allowNil
     }
-    public init(maximum: Int, allowNil: Bool = false) {
+    public init(maximum: Int) {
         self.range = ValidRange.Maximum(maximum)
-        self.allowNil = allowNil
     }
-    public init(range: Range<Int>, allowNil: Bool = false) {
+    public init(range: Range<Int>) {
         self.range = ValidRange.Range(range)
-        self.allowNil = allowNil
     }
     public func validate(string: String?) throws -> String? {
-        if string == nil && allowNil {
-            return nil
-        }
         switch range {
         case .Minimum(let minimum):
             let string = try validateNotNil(string, message: ValidationStringLengthMinimumFailedMessage(minimum))

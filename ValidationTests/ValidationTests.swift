@@ -98,20 +98,6 @@ class ValidationTests: ValidationTestCase {
                 try v.validate(nil)
             }
         }
-        do {
-            let v = ValidationStringLength(minimum: 1, allowNil: true)
-            assertValid() {
-                let result = try v.validate("foo")
-                XCTAssertEqual(result, "foo")
-            }
-            assertValid() {
-                let result = try v.validate(nil)
-                XCTAssertTrue(result == nil)
-            }
-            assertValidationError("\"\" should not be empty.") {
-                try v.validate("")
-            }
-        }
     }
     
     func testValidationStringLengthMinimum2() {
@@ -126,20 +112,6 @@ class ValidationTests: ValidationTestCase {
             }
             assertValidationError("nil should contain at least 2 characters.") {
                 try v.validate(nil)
-            }
-        }
-        do {
-            let v = ValidationStringLength(minimum: 2, allowNil: true)
-            assertValid() {
-                let result = try v.validate("foo")
-                XCTAssertEqual(result, "foo")
-            }
-            assertValid() {
-                let result = try v.validate(nil)
-                XCTAssertTrue(result == nil)
-            }
-            assertValidationError("\" \" should contain at least 2 characters.") {
-                try v.validate(" ")
             }
         }
     }
@@ -158,20 +130,6 @@ class ValidationTests: ValidationTestCase {
                 try v.validate(nil)
             }
         }
-        do {
-            let v = ValidationStringLength(maximum: 0, allowNil: true)
-            assertValid() {
-                let result = try v.validate("")
-                XCTAssertEqual(result, "")
-            }
-            assertValid() {
-                let result = try v.validate(nil)
-                XCTAssertTrue(result == nil)
-            }
-            assertValidationError("\"foo\" should be empty.") {
-                try v.validate("foo")
-            }
-        }
     }
     
     func testValidationStringLengthMaximum1() {
@@ -186,20 +144,6 @@ class ValidationTests: ValidationTestCase {
             }
             assertValidationError("nil should contain at most 1 character.") {
                 try v.validate(nil)
-            }
-        }
-        do {
-            let v = ValidationStringLength(maximum: 1, allowNil: true)
-            assertValid() {
-                let result = try v.validate("f")
-                XCTAssertEqual(result, "f")
-            }
-            assertValid() {
-                let result = try v.validate(nil)
-                XCTAssertTrue(result == nil)
-            }
-            assertValidationError("\"foo\" should contain at most 1 character.") {
-                try v.validate("foo")
             }
         }
     }
