@@ -48,7 +48,7 @@ A validation checks a value of type TestedType, and eventually returns a value o
 ### Built-in Validations
 
 | Validation type              | TestedType      | ValidType       |            |
-| ---------------------------- | --------------- | --------------- | ---------- |
+|:---------------------------- |:--------------- |:--------------- |:---------- |
 | Validation                   | T               | T               | All values pass. |
 | ValidationFailure            | T               | T               | All values fail. |
 | ValidationNil                | T?              | T?              | Checks that input is nil. |
