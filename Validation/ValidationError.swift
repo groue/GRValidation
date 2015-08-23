@@ -44,7 +44,7 @@ public struct ValidationError : ErrorType {
         case Value(value: Any?, message: String)
         
         /// Error on a model
-        case Model(model: Any, propertyNames: [String], globalDescription: String, error: ValidationError)
+        case Model(model: Any, propertyNames: [String], message: String, error: ValidationError)
         
         /// Error on a model property
         case Property(model: Any, propertyName: String, error: ValidationError)
@@ -77,8 +77,8 @@ extension ValidationError : CustomStringConvertible {
             }
         case .Property(let model, let propertyName, let error):
             return "Invalid \(String(reflecting: model)): \(error.description(propertyName))"
-        case .Model(let model, _, let globalDescription, _):
-            return "Invalid \(String(reflecting: model)): \(globalDescription)"
+        case .Model(let model, _, let message, _):
+            return "Invalid \(String(reflecting: model)): \(message)"
         case .Compound(let mode, let errors):
             switch mode {
             case .Or:

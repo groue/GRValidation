@@ -64,7 +64,7 @@ extension Validable {
         do {
             try validation.validate()
         } catch let error as ValidationError {
-            throw ValidationError(.Model(model: self, propertyNames: propertyNames, globalDescription: message, error: error))
+            throw ValidationError(.Model(model: self, propertyNames: propertyNames, message: message, error: error))
         }
     }
 }
