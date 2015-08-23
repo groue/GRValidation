@@ -27,7 +27,7 @@ import Validation
 
 class ValidationTestCase: XCTestCase {
 
-    func assertValid(block: () throws -> ()) {
+    func assertNoError(block: () throws -> ()) {
         do {
             try block()
         } catch {
@@ -35,22 +35,15 @@ class ValidationTestCase: XCTestCase {
         }
     }
     
-    func assertValidationError(expectedErrorDescription: String, owned: Bool? = nil, block: () throws -> ()) {
+    func assertValidationError(expectedErrorDescription: String, block: () throws -> ()) {
         do {
             try block()
             XCTFail("ValidationError expected")
         } catch let error as ValidationError {
             XCTAssertEqual(error.description, expectedErrorDescription)
             if error.description != expectedErrorDescription {
+                // for debugging breakpoint
                 error.description
-            }
-            
-            if let owned = owned {
-                if error.owner != nil {
-                    XCTAssertTrue(owned)
-                } else {
-                    XCTAssertFalse(owned)
-                }
             }
         } catch {
             XCTFail("ValidationError expected")

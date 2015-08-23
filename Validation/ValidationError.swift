@@ -109,7 +109,7 @@ extension ValidationError : CustomStringConvertible {
         case .Global(let description, _):
             return description
         case .Owned(let owner, let error):
-            return "\(owner.dynamicType) validation error: \(error.description(valueDescription))"
+            return "\(String(reflecting: owner)) validation error: \(error.description(valueDescription))"
         }
     }
 }

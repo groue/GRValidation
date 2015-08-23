@@ -29,7 +29,7 @@ class ValidationTests: ValidationTestCase {
     
     func testValidation() {
         let v = Validation<Int>()
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
@@ -44,7 +44,7 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationNotNil() {
         let v = ValidationNotNil<Int>()
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
@@ -55,7 +55,7 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationCollectionNotEmpty() {
         let v = ValidationCollectionNotEmpty<[Int]>()
-        assertValid() {
+        assertNoError() {
             let result = try v.validate([1,2,3])
             XCTAssertEqual(result, [1,2,3])
         }
@@ -70,30 +70,30 @@ class ValidationTests: ValidationTestCase {
     func testValidationTrim() {
         do {
             let v = ValidationTrim()
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate(" foo ")
                 XCTAssertEqual(result, "foo")
             }
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate(" \t\n")
                 XCTAssertEqual(result, "")
             }
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate(nil)
                 XCTAssertTrue(result == nil)
             }
         }
         do {
             let v = ValidationTrim(characterSet: NSCharacterSet(charactersInString: "<>"))
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("<foo>")
                 XCTAssertEqual(result, "foo")
             }
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("><><")
                 XCTAssertEqual(result, "")
             }
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate(nil)
                 XCTAssertTrue(result == nil)
             }
@@ -103,7 +103,7 @@ class ValidationTests: ValidationTestCase {
     func testValidationStringLengthMinimum1() {
         do {
             let v = ValidationStringLength(minimum: 1)
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("foo")
                 XCTAssertEqual(result, "foo")
             }
@@ -119,7 +119,7 @@ class ValidationTests: ValidationTestCase {
     func testValidationStringLengthMinimum2() {
         do {
             let v = ValidationStringLength(minimum: 2)
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("foo")
                 XCTAssertEqual(result, "foo")
             }
@@ -135,7 +135,7 @@ class ValidationTests: ValidationTestCase {
     func testValidationStringLengthMaximum0() {
         do {
             let v = ValidationStringLength(maximum: 0)
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("")
                 XCTAssertEqual(result, "")
             }
@@ -151,7 +151,7 @@ class ValidationTests: ValidationTestCase {
     func testValidationStringLengthMaximum1() {
         do {
             let v = ValidationStringLength(maximum: 1)
-            assertValid() {
+            assertNoError() {
                 let result = try v.validate("f")
                 XCTAssertEqual(result, "f")
             }
@@ -171,7 +171,7 @@ class ValidationTests: ValidationTestCase {
             case Two
         }
         let v = ValidationRawValue<Enum>()
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, Enum.One)
         }
@@ -185,7 +185,7 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationEqual() {
         let v = ValidationEqual(1)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
@@ -199,11 +199,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationNotEqual() {
         let v = ValidationNotEqual(1)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValid() {
+        assertNoError() {
             try v.validate(nil)
         }
         assertValidationError("1 should not be equal to 1.") {
@@ -213,11 +213,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationElementOf() {
         let v = ValidationElementOf([1,2])
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
@@ -231,11 +231,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationNotElementOf() {
         let v = ValidationNotElementOf([1,2])
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(0)
             XCTAssertEqual(result, 0)
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(nil)
             XCTAssertTrue(result == nil)
         }
@@ -246,11 +246,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationRangeWithMaximum() {
         let v = ValidationRange(maximum: 2)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
@@ -264,11 +264,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationRangeWithMinimum() {
         let v = ValidationRange(minimum: 2)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(3)
             XCTAssertEqual(result, 3)
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
@@ -282,11 +282,11 @@ class ValidationTests: ValidationTestCase {
     
     func testValidationRangeWithRange() {
         let v = ValidationRange(range: 2..<4)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(2)
             XCTAssertEqual(result, 2)
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(3)
             XCTAssertEqual(result, 3)
         }
@@ -303,7 +303,7 @@ class ValidationTests: ValidationTestCase {
     
     func testRegularExpressionValidationFromPattern() {
         let v = ValidationRegularExpression(pattern: "foo")
-        assertValid() {
+        assertNoError() {
             let result = try v.validate("xxxfooxxx")
             XCTAssertEqual(result, "xxxfooxxx")
         }
@@ -317,7 +317,7 @@ class ValidationTests: ValidationTestCase {
     
     func testRegularExpressionValidationFromRegularExpression() {
         let v = try! ValidationRegularExpression(NSRegularExpression(pattern: "^foo$", options: NSRegularExpressionOptions()))
-        assertValid() {
+        assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
@@ -334,7 +334,7 @@ class ValidationTests: ValidationTestCase {
             guard value != 10 else { throw ValidationError(value: value, message: "should not be 10.") }
             return value
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
@@ -345,7 +345,7 @@ class ValidationTests: ValidationTestCase {
     
     func testAnyValidationFromBaseValidation() {
         let v = AnyValidation(ValidationNotNil<Int>())
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, 1)
         }
@@ -356,7 +356,7 @@ class ValidationTests: ValidationTestCase {
     
     func testFlatMapOperator() {
         let v = ValidationNotNil<String>() >>> { return $0.characters.count }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, 3)
         }
@@ -367,7 +367,7 @@ class ValidationTests: ValidationTestCase {
     
     func testComposedValidation() {
         let v = ValidationNotNil() >>> ValidationStringLength(minimum: 1)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
@@ -381,11 +381,11 @@ class ValidationTests: ValidationTestCase {
     
     func testOrValidation() {
         let v = ValidationNil<String>() || ValidationStringLength(minimum: 1)
-        assertValid() {
+        assertNoError() {
             let result = try v.validate("foo")
             XCTAssertEqual(result, "foo")
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(nil)
             XCTAssertTrue(result == nil)
         }
@@ -402,7 +402,7 @@ class ValidationTests: ValidationTestCase {
             guard value <= 10 else { throw ValidationError(value: value, message: "should be less than 10.") }
             return true
         }
-        assertValid() {
+        assertNoError() {
             let result = try v.validate(5)
             XCTAssertEqual(result, 5)
         }
