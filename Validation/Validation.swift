@@ -119,21 +119,6 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 }
 
 
-// MARK: - Derived Validations
-
-extension ValidationType {
-    func forModel(model: Any, propertyNames: [String], globalDescription: String?) -> AnyValidation<TestedType, ValidType> {
-        return AnyValidation {
-            do {
-                return try self.validate($0)
-            } catch let error as ValidationError {
-                throw ValidationError(.Model(model: model, propertyNames: propertyNames, globalDescription: globalDescription, error: error))
-            }
-        }
-    }
-}
-
-
 // MARK: - Composed Validations
 
 infix operator >>> { associativity left precedence 130 }

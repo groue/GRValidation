@@ -25,7 +25,7 @@
 import XCTest
 import Validation
 
-class ValidationTests: ValidationTestCase {
+class ValueValidationTests: ValidationTestCase {
     
     func testValidation() {
         let v = Validation<Int>()

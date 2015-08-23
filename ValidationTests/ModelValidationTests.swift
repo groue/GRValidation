@@ -137,7 +137,7 @@ struct Person : Validable {
     }
 }
 
-class PropertyValidationTests: ValidationTestCase {
+class ModelValidationTests: ValidationTestCase {
     
     func testSimpleModel() {
         assertNoError {

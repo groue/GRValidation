@@ -39,7 +39,11 @@ extension Validable {
         }
     */
     public func validate<V: ValidationType where V.TestedType == Void>(property propertyName: String, with validation: V) throws -> V.ValidType {
-        return try validation.forModel(self, propertyNames: [propertyName], globalDescription: nil).validate()
+        do {
+            return try validation.validate()
+        } catch let error as ValidationError {
+            throw ValidationError(.Property(model: self, propertyName: propertyName, error: error))
+        }
     }
     
     /**
@@ -57,6 +61,10 @@ extension Validable {
         }
     */
     public func validate<V: ValidationType where V.TestedType == Void>(properties propertyNames: [String] = [], message: String, with validation: V) throws {
-        try validation.forModel(self, propertyNames: propertyNames, globalDescription: message).validate()
+        do {
+            try validation.validate()
+        } catch let error as ValidationError {
+            throw ValidationError(.Model(model: self, propertyNames: propertyNames, globalDescription: message, error: error))
+        }
     }
 }

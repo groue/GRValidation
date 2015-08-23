@@ -44,7 +44,10 @@ public struct ValidationError : ErrorType {
         case Value(value: Any?, message: String)
         
         /// Error on a model
-        case Model(model: Any, propertyNames: [String], globalDescription: String?, error: ValidationError)
+        case Model(model: Any, propertyNames: [String], globalDescription: String, error: ValidationError)
+        
+        /// Error on a model property
+        case Property(model: Any, propertyName: String, error: ValidationError)
         
         /// Compound errors
         case Compound(mode: CompoundMode, errors: [ValidationError])
@@ -72,13 +75,10 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Model(let model, let propertyNames, let globalDescription, let error):
-            if let globalDescription = globalDescription {
-                return "Invalid \(String(reflecting: model)): \(globalDescription)"
-            } else {
-                let properties = ", ".join(propertyNames)
-                return "Invalid \(String(reflecting: model)): \(error.description(properties))"
-            }
+        case .Property(let model, let propertyName, let error):
+            return "Invalid \(String(reflecting: model)): \(error.description(propertyName))"
+        case .Model(let model, _, let globalDescription, _):
+            return "Invalid \(String(reflecting: model)): \(globalDescription)"
         case .Compound(let mode, let errors):
             switch mode {
             case .Or:
@@ -125,6 +125,12 @@ extension ValidationError {
         switch type {
         case .Value:
             return []
+        case .Property(_, let propertyName, _):
+            if propertyName == name {
+                return [self]
+            } else {
+                return []
+            }
         case .Model(_, let propertyNames, _, _):
             if propertyNames.contains(name) {
                 return [self]
