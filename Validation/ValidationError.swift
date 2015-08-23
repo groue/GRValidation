@@ -121,7 +121,7 @@ extension ValidationError {
 
 extension ValidationError {
     /// Returns all errors for a given property name.
-    public func errorsFor(propertyName propertyName: String) -> [ValidationError] {
+    public func propertyErrors(propertyName: String) -> [ValidationError] {
         switch type {
         case .Value:
             return []
@@ -138,7 +138,7 @@ extension ValidationError {
                 return []
             }
         case .Compound(_, let errors):
-            return errors.flatMap { $0.errorsFor(propertyName: propertyName) }
+            return errors.flatMap { $0.propertyErrors(propertyName) }
         }
     }
     
