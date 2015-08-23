@@ -122,30 +122,12 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 // MARK: - Derived Validations
 
 extension ValidationType {
-    func global(description: String) -> AnyValidation<TestedType, ValidType> {
+    func forModel(model: Any, propertyNames: [String], globalDescription: String?) -> AnyValidation<TestedType, ValidType> {
         return AnyValidation {
             do {
                 return try self.validate($0)
             } catch let error as ValidationError {
-                throw ValidationError(.Global(description: description, error: error))
-            }
-        }
-    }
-    func named(name: String) -> AnyValidation<TestedType, ValidType> {
-        return AnyValidation {
-            do {
-                return try self.validate($0)
-            } catch let error as ValidationError {
-                throw ValidationError(.Named(name: name, error: error))
-            }
-        }
-    }
-    func owned(owner: Any) -> AnyValidation<TestedType, ValidType> {
-        return AnyValidation {
-            do {
-                return try self.validate($0)
-            } catch let error as ValidationError {
-                throw ValidationError(.Owned(owner: owner, error: error))
+                throw ValidationError(.Model(model: model, propertyNames: propertyNames, globalDescription: globalDescription, error: error))
             }
         }
     }

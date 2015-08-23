@@ -31,15 +31,6 @@ public struct ValidationError : ErrorType {
         self.init(.Value(value: value, message: message))
     }
     
-    public var owner: Any? {
-        switch type {
-        case .Owned(let owner, _):
-            return owner
-        default:
-            return nil
-        }
-    }
-    
     
     // not public
     
@@ -52,17 +43,11 @@ public struct ValidationError : ErrorType {
         /// Error on a value
         case Value(value: Any?, message: String)
         
-        /// Error on a named value
-        case Named(name: String, error: ValidationError)
+        /// Error on a model
+        case Model(model: Any, propertyNames: [String], globalDescription: String?, error: ValidationError)
         
         /// Compound errors
         case Compound(mode: CompoundMode, errors: [ValidationError])
-        
-        /// Error with custom description
-        case Global(description: String, error: ValidationError)
-        
-        /// Owned error
-        case Owned(owner: Any, error: ValidationError)
     }
     
     let type: Type
@@ -87,8 +72,13 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Named(let name, let error):
-            return error.description(name)
+        case .Model(let model, let propertyNames, let globalDescription, let error):
+            if let globalDescription = globalDescription {
+                return "\(String(reflecting: model)) validation error: \(globalDescription)"
+            } else {
+                let properties = ", ".join(propertyNames)
+                return "\(String(reflecting: model)) validation error: \(error.description(properties))"
+            }
         case .Compound(let mode, let errors):
             switch mode {
             case .Or:
@@ -106,10 +96,6 @@ extension ValidationError : CustomStringConvertible {
                 }
                 return " ".join(uniq)
             }
-        case .Global(let description, _):
-            return description
-        case .Owned(let owner, let error):
-            return "\(String(reflecting: owner)) validation error: \(error.description(valueDescription))"
         }
     }
 }
@@ -139,18 +125,14 @@ extension ValidationError {
         switch type {
         case .Value:
             return []
-        case .Named(let errorName, _):
-            if name == errorName {
+        case .Model(_, let propertyNames, _, _):
+            if propertyNames.contains(name) {
                 return [self]
             } else {
                 return []
             }
         case .Compound(_, let errors):
             return errors.flatMap { $0.errorsFor(name: name) }
-        case .Global(_, let error):
-            return error.errorsFor(name: name)
-        case .Owned(_, let error):
-            return error.errorsFor(name: name)
         }
     }
 }

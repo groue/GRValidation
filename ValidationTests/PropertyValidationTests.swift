@@ -42,7 +42,7 @@ struct SimpleModel : Validable {
     
     func validate() throws {
         // OK: error is named, and owned.
-        try validateProperty("name", with: name >>> ValidationNotNil())
+        try validate(property: "name", with: name >>> ValidationNotNil())
     }
 }
 
@@ -58,9 +58,9 @@ struct IntermediateModel : Validable {
             // OK: all errors are gathered in a single error
             // FIXME?: ValidationPlan does not adopt ValidationType. This is because we need to mutate self.phoneNumber, and ValidationType is not allowed to perform side effects on value types.
             try ValidationPlan()
-                .append { try validateProperty("name", with: name >>> ValidationStringLength(minimum: 1)) }
-                .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
-                .append { phoneNumber = try validateProperty("phoneNumber", with: phoneNumber >>> ValidationPhoneNumber(format: .International)) }
+                .append { try validate(property: "name", with: name >>> ValidationStringLength(minimum: 1)) }
+                .append { try validate(property: "age", with: age >>> ValidationRange(minimum: 0)) }
+                .append { phoneNumber = try validate(property: "phoneNumber", with: phoneNumber >>> ValidationPhoneNumber(format: .International)) }
                 .validate()
         }
     }
@@ -76,13 +76,13 @@ struct ComplexModel : Validable {
     
     func validate() throws {
         try ValidationPlan()
-            .append { try validateProperty("name", with: name >>> ValidationStringLength(minimum: 1)) }
-            .append { try validateProperty("age", with: age >>> ValidationRange(minimum: 0)) }
-            .append { try validateProperty("magicWord", with: magicWord >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))) }
-            .append { try validateProperty("cardNumber", with: cardNumber >>> (ValidationNil<String>() || ValidationStringLength(minimum: 10))) }
+            .append { try validate(property: "name", with: name >>> ValidationStringLength(minimum: 1)) }
+            .append { try validate(property: "age", with: age >>> ValidationRange(minimum: 0)) }
+            .append { try validate(property: "magicWord", with: magicWord >>> (ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))) }
+            .append { try validate(property: "cardNumber", with: cardNumber >>> (ValidationNil<String>() || ValidationStringLength(minimum: 10))) }
             // FIXME: the syntax is somewhat different than property validation.
             // Do we have to force the user to use the `||` operator?
-            .append { try validate("Value1 or Value2 must be not nil.", with: (value1 >>> ValidationNotNil() || value2 >>> ValidationNotNil())) }
+            .append { try validate(message: "Value1 or Value2 must be not nil.", with: (value1 >>> ValidationNotNil() || value2 >>> ValidationNotNil())) }
             .validate()
     }
 }
@@ -100,36 +100,37 @@ struct Person : Validable {
             .append {
                 // Name should not be empty after whitespace trimming:
                 let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
-                name = try validateProperty(
-                    "name",
+                name = try validate(
+                    property: "name",
                     with: name >>> nameValidation)
             }
             .append {
                 // Age should be nil, or positive:
                 let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
-                try validateProperty(
-                    "age",
+                try validate(
+                    property: "age",
                     with: age >>> ageValidation)
             }
             .append {
                 // Email should be nil, or contain @ after whitespace trimming:
                 let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
-                email = try validateProperty(
-                    "email",
+                email = try validate(
+                    property: "email",
                     with: email >>> emailValidation)
             }
             .append {
                 // Phone number should be nil, or be a valid phone number.
                 // ValidationPhoneNumber applies international formatting.
                 let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
-                phoneNumber = try validateProperty(
-                    "phoneNumber",
+                phoneNumber = try validate(
+                    property: "phoneNumber",
                     with: phoneNumber >>> phoneNumberValidation)
             }
             .append {
                 // An email or a phone number is required.
                 try validate(
-                    "Please provide an email or a phone number.",
+                    properties: ["email", "phoneNumber"],
+                    message: "Please provide an email or a phone number.",
                     with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
             }
             .validate()
@@ -150,7 +151,7 @@ class PropertyValidationTests: ValidationTestCase {
             } catch let error as ValidationError {
                 XCTAssertEqual(error.description, "ValidationTests.SimpleModel(name: nil) validation error: name should not be nil.")
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be nil."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.SimpleModel(name: nil) validation error: name should not be nil."])
             }
         }
     }
@@ -171,7 +172,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be empty."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.IntermediateModel(name: nil, age: Optional(12), phoneNumber: Optional(\"1 23 45 67 89\")) validation error: name should not be empty."])
                 
                 // Test repaired properties
                 XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
@@ -187,7 +188,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["ValidationTests.IntermediateModel(name: Optional(\"Arthur\"), age: nil, phoneNumber: Optional(\"1 23 45 67 89\")) validation error: age should be greater than or equal to 0."])
                 
                 // Test repaired properties
                 XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
@@ -203,11 +204,11 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be empty."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: name should not be empty."])
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: age should be greater than or equal to 0."])
                 let phoneNumberMessages = error.errorsFor(name: "phoneNumber").map { $0.description }.sort()
-                XCTAssertEqual(phoneNumberMessages, ["phoneNumber should not be nil."])
+                XCTAssertEqual(phoneNumberMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: phoneNumber should not be nil."])
             }
         }
     }
@@ -231,13 +232,13 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be empty."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: name should not be empty."])
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: age should be greater than or equal to 0."])
                 let magicWordMessages = error.errorsFor(name: "magicWord").map { $0.description }.sort()
-                XCTAssertEqual(magicWordMessages, ["magicWord is invalid."])
+                XCTAssertEqual(magicWordMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: magicWord is invalid."])
                 let cardNumberMessages = error.errorsFor(name: "cardNumber").map { $0.description }.sort()
-                XCTAssertEqual(cardNumberMessages, ["cardNumber should contain at least 10 characters."])
+                XCTAssertEqual(cardNumberMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: cardNumber should contain at least 10 characters."])
                 // TODO: fetch and test global error "Value1 or Value2 must be not nil."
             }
         }
@@ -260,7 +261,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be empty."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.Person(name: nil, age: nil, email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: name should not be empty."])
             }
         }
         assertNoError {
@@ -273,7 +274,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(-1), email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: age should be greater than or equal to 0."])
             }
         }
         assertNoError {
@@ -286,7 +287,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let emailMessages = error.errorsFor(name: "email").map { $0.description }.sort()
-                XCTAssertEqual(emailMessages, ["email is invalid."])
+                XCTAssertEqual(emailMessages, ["ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: Optional(\"foo\"), phoneNumber: nil) validation error: email is invalid."])
             }
         }
         assertNoError {
@@ -310,7 +311,7 @@ class PropertyValidationTests: ValidationTestCase {
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["name should not be empty."])
+                XCTAssertEqual(nameMessages, ["ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil) validation error: name should not be empty."])
                 
                 // TODO: fetch and test global error "Please provide an email or a phone number."
             }

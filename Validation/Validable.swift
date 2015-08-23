@@ -38,8 +38,8 @@ extension Validable {
             }
         }
     */
-    public func validateProperty<V: ValidationType where V.TestedType == Void>(name: String, with validation: V) throws -> V.ValidType {
-        return try validation.named(name).owned(self).validate()
+    public func validate<V: ValidationType where V.TestedType == Void>(property propertyName: String, with validation: V) throws -> V.ValidType {
+        return try validation.forModel(self, propertyNames: [propertyName], globalDescription: nil).validate()
     }
     
     /**
@@ -56,7 +56,7 @@ extension Validable {
             }
         }
     */
-    public func validate<V: ValidationType where V.TestedType == Void>(description: String, with validation: V) throws {
-        try validation.global(description).owned(self).validate()
+    public func validate<V: ValidationType where V.TestedType == Void>(properties propertyNames: [String] = [], message: String, with validation: V) throws {
+        try validation.forModel(self, propertyNames: propertyNames, globalDescription: message).validate()
     }
 }
