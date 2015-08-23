@@ -120,25 +120,39 @@ extension ValidationError {
 }
 
 extension ValidationError {
-    /// Returns all errors for a given name.
-    public func errorsFor(name name: String) -> [ValidationError] {
+    /// Returns all errors for a given property name.
+    public func errorsFor(propertyName propertyName: String) -> [ValidationError] {
         switch type {
         case .Value:
             return []
-        case .Property(_, let propertyName, _):
-            if propertyName == name {
+        case .Property(_, let name, _):
+            if name == propertyName {
                 return [self]
             } else {
                 return []
             }
         case .Model(_, let propertyNames, _, _):
-            if propertyNames.contains(name) {
+            if propertyNames.contains(propertyName) {
                 return [self]
             } else {
                 return []
             }
         case .Compound(_, let errors):
-            return errors.flatMap { $0.errorsFor(name: name) }
+            return errors.flatMap { $0.errorsFor(propertyName: propertyName) }
+        }
+    }
+    
+    /// Returns all errors for the model as a whole.
+    public func modelErrors() -> [ValidationError] {
+        switch type {
+        case .Value:
+            return []
+        case .Property:
+            return []
+        case .Model:
+            return [self]
+        case .Compound(_, let errors):
+            return errors.flatMap { $0.modelErrors() }
         }
     }
 }
