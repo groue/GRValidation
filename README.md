@@ -58,9 +58,23 @@ For example:
 ```swift
 // Positive integer
 let v = ValidationRange(minimum: 0)
-try v.validate(1)   // OK
+try v.validate(1)   // OK: 1
 try v.validate(nil) // ValidationError: nil should be greater than or equal to 0.
 try v.validate(-1)  // ValidationError: -1 should be greater than or equal to 0.
+```
+
+The returned value may be different from the input:
+
+```swift
+// Enum raw value
+enum Color : Int {
+    case Red
+    case White
+    case Rose
+}
+let v = ValidationRawValue<Color>()
+try v.validate(0)   // OK: .Red
+try v.validate(3)   // ValidationError: 3 is invalid.
 ```
 
 See the full list of [built-in Value Validations](#built-in-value-validations) and the ways to [compose](#composed-validations) them.
