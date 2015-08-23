@@ -132,13 +132,14 @@ public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidT
 /**
 Example:
 
-    let v = ValidationNotNil() >>> ValidationStringNotEmpty()
+    ValidationNotNil() >>> ValidationStringNotEmpty()
 */
 public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
 // ValidationNotNil() >>> { f($0) } TODO: is it a flatMap?
+// FIXME: this is unused today.
 public func >>> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
     return AnyValidation { try right(left.validate($0)) }
 }
@@ -239,7 +240,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
 /**
 Example:
 
-    try validate(magicWord, forName: "magicWord", with: ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar"))
+    ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
 */
 public func &&<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
     return AnyValidation {

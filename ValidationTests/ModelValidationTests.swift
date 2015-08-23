@@ -46,10 +46,17 @@ struct SimpleModel : Validable {
     }
 }
 
-struct IntermediateModel : Validable {
+struct IntermediateModel : Validable, CustomStringConvertible {
     let name: String?
     let age: Int?
     var phoneNumber: String?
+    
+    // Ease error description tests by returning a constant description.
+    // If this type was a class instead of a struct, errors would not have to
+    // store copies, and this problem would be avoided.
+    var description: String {
+        return "IntermediateModel"
+    }
     
     mutating func validate() throws {
         do {
@@ -246,7 +253,10 @@ class ModelValidationTests: ValidationTestCase {
                 XCTAssertEqual(magicWordMessages, ["Invalid \(modelDescription): magicWord is invalid."])
                 let cardNumberMessages = error.errorsFor(propertyName: "cardNumber").map { $0.description }.sort()
                 XCTAssertEqual(cardNumberMessages, ["Invalid \(modelDescription): cardNumber should contain at least 10 characters."])
-                // TODO: fetch and test global error "Value1 or Value2 must be not nil."
+                
+                // Test global errors
+                let modelMessages = error.modelErrors().map { $0.description }.sort()
+                XCTAssertEqual(modelMessages, ["Invalid \(modelDescription): Value1 or Value2 must be not nil."])
             }
         }
     }
@@ -313,7 +323,15 @@ class ModelValidationTests: ValidationTestCase {
                 // Test full error description
                 XCTAssertEqual(error.description, "Invalid \(personDescription): Please provide an email or a phone number.")
                 
-                // TODO: fetch and test global error "Please provide an email or a phone number."
+                // Test property errors
+                let emailMessages = error.errorsFor(propertyName: "email").map { $0.description }.sort()
+                XCTAssertEqual(emailMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
+                let phoneNumberMessages = error.errorsFor(propertyName: "phoneNumber").map { $0.description }.sort()
+                XCTAssertEqual(phoneNumberMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
+                
+                // Test global errors
+                let modelMessages = error.modelErrors().map { $0.description }.sort()
+                XCTAssertEqual(modelMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
             }
         }
         assertNoError {
@@ -329,8 +347,14 @@ class ModelValidationTests: ValidationTestCase {
                 // Test property errors
                 let nameMessages = error.errorsFor(propertyName: "name").map { $0.description }.sort()
                 XCTAssertEqual(nameMessages, ["Invalid \(personDescription): name should not be empty."])
+                let emailMessages = error.errorsFor(propertyName: "email").map { $0.description }.sort()
+                XCTAssertEqual(emailMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
+                let phoneNumberMessages = error.errorsFor(propertyName: "phoneNumber").map { $0.description }.sort()
+                XCTAssertEqual(phoneNumberMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
                 
-                // TODO: fetch and test global error "Please provide an email or a phone number."
+                // Test global errors
+                let modelMessages = error.modelErrors().map { $0.description }.sort()
+                XCTAssertEqual(modelMessages, ["Invalid \(personDescription): Please provide an email or a phone number."])
             }
         }
     }
