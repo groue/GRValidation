@@ -107,36 +107,37 @@ struct Person : Validable {
             .append {
                 // Name should not be empty after whitespace trimming:
                 let nameValidation = ValidationTrim() >>> ValidationStringLength(minimum: 1)
-                name = try validateProperty(
-                    "name",
+                name = try validate(
+                    property: "name",
                     with: name >>> nameValidation)
             }
             .append {
                 // Age should be nil, or positive:
                 let ageValidation = ValidationNil() || ValidationRange(minimum: 0)
-                try validateProperty(
-                    "age",
+                try validate(
+                    property: "age",
                     with: age >>> ageValidation)
             }
             .append {
                 // Email should be nil, or contain @ after whitespace trimming:
                 let emailValidation = ValidationNil() || (ValidationTrim() >>> ValidationRegularExpression(pattern:"@"))
-                email = try validateProperty(
-                    "email",
+                email = try validate(
+                    property: "email",
                     with: email >>> emailValidation)
             }
             .append {
                 // Phone number should be nil, or be a valid phone number.
                 // ValidationPhoneNumber applies international formatting.
                 let phoneNumberValidation = ValidationNil() || (ValidationTrim() >>> ValidationPhoneNumber(format: .International))
-                phoneNumber = try validateProperty(
-                    "phoneNumber",
+                phoneNumber = try validate(
+                    property: "phoneNumber",
                     with: phoneNumber >>> phoneNumberValidation)
             }
             .append {
                 // An email or a phone number is required.
                 try validate(
-                    "Please provide an email or a phone number.",
+                    properties: ["email", "phoneNumber"],
+                    message: "Please provide an email or a phone number.",
                     with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
             }
             .validate()
