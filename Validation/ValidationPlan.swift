@@ -56,14 +56,11 @@ public class ValidationPlan {
     
     public init() { }
     
-    public func append(@noescape block: () throws -> ()) -> ValidationPlan {
+    public func append(@noescape block: () throws -> ()) rethrows -> ValidationPlan {
         do {
             try block()
         } catch let error as ValidationError {
             errors.append(error)
-        } catch {
-            // TODO: should store and rethrow in validate()
-            fatalError("Not a Validation error: \(error)")
         }
         return self
     }

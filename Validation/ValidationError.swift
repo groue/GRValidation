@@ -74,10 +74,10 @@ extension ValidationError : CustomStringConvertible {
             }
         case .Model(let model, let propertyNames, let globalDescription, let error):
             if let globalDescription = globalDescription {
-                return "\(String(reflecting: model)) validation error: \(globalDescription)"
+                return "Invalid \(String(reflecting: model)): \(globalDescription)"
             } else {
                 let properties = ", ".join(propertyNames)
-                return "\(String(reflecting: model)) validation error: \(error.description(properties))"
+                return "Invalid \(String(reflecting: model)): \(error.description(properties))"
             }
         case .Compound(let mode, let errors):
             switch mode {

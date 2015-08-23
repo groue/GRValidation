@@ -68,18 +68,7 @@ See the full list of [built-in Value Validations](#built-in-value-validations) a
 
 ### Validable
 
-The **Validable** protocol provides two methods that help validating a property, or a full model as a whole:
-
-```swift
-public protocol Validable {}
-extension Validable {
-    /// Property validation. Returns the validated value:
-    public func validateProperty(name: String, with: Validation) throws -> Validation.ValidType
-    
-    /// Global validation:
-    public func validate(description: String, with: Validation) throws
-}
-```
+The **Validable** protocol provides methods that help validating models.
 
 Let's start with a simple model:
 
@@ -89,7 +78,7 @@ struct Person: Validable {
     
     func validate() throws {
         // Name should not be nil or empty.
-        try validateProperty("name", with: name >>> ValidationStringLength(minimum: 1))
+        try validate(property: "name", with: name >>> ValidationStringLength(minimum: 1))
     }
 }
 
@@ -98,7 +87,7 @@ try person.validate()   // OK
 
 let person = Person(name: nil)
 try person.validate()
-// Person validation error: name should not be empty.
+// Invalid Person(name: nil): name should not be empty.
 ```
 
 
@@ -161,19 +150,19 @@ person.phoneNumber      // "+33 1 23 45 67 89" (trimmed & formatted)
 
 var person = Person(name: nil, age: nil, email: "foo@bar.com", phoneNumber: nil)
 try person.validate()
-// Person validation error: name should not be empty.
+// Invalid Person: name should not be empty.
 
 var person = Person(name: "Arthur", age: -1, email: "foo@bar.com", phoneNumber: nil)
 try person.validate()
-// Person validation error: age should be greater than or equal to 0.
+// Invalid Person: age should be greater than or equal to 0.
 
 var person = Person(name: "Arthur", age: 35, email: nil, phoneNumber: nil)
 try person.validate()
-// Person validation error: Please provide an email or a phone number.
+// Invalid Person: Please provide an email or a phone number.
 
 var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
 try person.validate()
-// Person validation error: email is invalid.
+// Invalid Person: email is invalid.
 ```
 
 

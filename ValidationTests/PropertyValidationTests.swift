@@ -149,9 +149,9 @@ class PropertyValidationTests: ValidationTestCase {
             do {
                 try model.validate()
             } catch let error as ValidationError {
-                XCTAssertEqual(error.description, "ValidationTests.SimpleModel(name: nil) validation error: name should not be nil.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.SimpleModel(name: nil): name should not be nil.")
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.SimpleModel(name: nil) validation error: name should not be nil."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.SimpleModel(name: nil): name should not be nil."])
             }
         }
     }
@@ -168,11 +168,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try model.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.IntermediateModel(name: nil, age: Optional(12), phoneNumber: Optional(\"1 23 45 67 89\")) validation error: name should not be empty.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.IntermediateModel(name: nil, age: Optional(12), phoneNumber: Optional(\"1 23 45 67 89\")): name should not be empty.")
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.IntermediateModel(name: nil, age: Optional(12), phoneNumber: Optional(\"1 23 45 67 89\")) validation error: name should not be empty."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.IntermediateModel(name: nil, age: Optional(12), phoneNumber: Optional(\"1 23 45 67 89\")): name should not be empty."])
                 
                 // Test repaired properties
                 XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
@@ -184,11 +184,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try model.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.IntermediateModel(name: Optional(\"Arthur\"), age: nil, phoneNumber: Optional(\"1 23 45 67 89\")) validation error: age should be greater than or equal to 0.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.IntermediateModel(name: Optional(\"Arthur\"), age: nil, phoneNumber: Optional(\"1 23 45 67 89\")): age should be greater than or equal to 0.")
                 
                 // Test property errors
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["ValidationTests.IntermediateModel(name: Optional(\"Arthur\"), age: nil, phoneNumber: Optional(\"1 23 45 67 89\")) validation error: age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["Invalid ValidationTests.IntermediateModel(name: Optional(\"Arthur\"), age: nil, phoneNumber: Optional(\"1 23 45 67 89\")): age should be greater than or equal to 0."])
                 
                 // Test repaired properties
                 XCTAssertEqual(model.phoneNumber!, "+33 1 23 45 67 89")
@@ -200,15 +200,15 @@ class PropertyValidationTests: ValidationTestCase {
                 try model.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: name should not be empty. ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: age should be greater than or equal to 0. ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: phoneNumber should not be nil.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): name should not be empty. Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): age should be greater than or equal to 0. Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): phoneNumber should not be nil.")
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: name should not be empty."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): name should not be empty."])
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): age should be greater than or equal to 0."])
                 let phoneNumberMessages = error.errorsFor(name: "phoneNumber").map { $0.description }.sort()
-                XCTAssertEqual(phoneNumberMessages, ["ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil) validation error: phoneNumber should not be nil."])
+                XCTAssertEqual(phoneNumberMessages, ["Invalid ValidationTests.IntermediateModel(name: nil, age: nil, phoneNumber: nil): phoneNumber should not be nil."])
             }
         }
     }
@@ -228,17 +228,17 @@ class PropertyValidationTests: ValidationTestCase {
                 try model.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: name should not be empty. ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: age should be greater than or equal to 0. ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: magicWord is invalid. ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: cardNumber should contain at least 10 characters. ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: Value1 or Value2 must be not nil.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): name should not be empty. Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): age should be greater than or equal to 0. Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): magicWord is invalid. Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): cardNumber should contain at least 10 characters. Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): Value1 or Value2 must be not nil.")
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: name should not be empty."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): name should not be empty."])
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): age should be greater than or equal to 0."])
                 let magicWordMessages = error.errorsFor(name: "magicWord").map { $0.description }.sort()
-                XCTAssertEqual(magicWordMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: magicWord is invalid."])
+                XCTAssertEqual(magicWordMessages, ["Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): magicWord is invalid."])
                 let cardNumberMessages = error.errorsFor(name: "cardNumber").map { $0.description }.sort()
-                XCTAssertEqual(cardNumberMessages, ["ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil) validation error: cardNumber should contain at least 10 characters."])
+                XCTAssertEqual(cardNumberMessages, ["Invalid ValidationTests.ComplexModel(name: Optional(\"\"), age: Optional(-12), magicWord: Optional(\"qux\"), cardNumber: Optional(\"123\"), value1: nil, value2: nil): cardNumber should contain at least 10 characters."])
                 // TODO: fetch and test global error "Value1 or Value2 must be not nil."
             }
         }
@@ -257,11 +257,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try person.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.Person(name: nil, age: nil, email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: name should not be empty.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.Person(name: nil, age: nil, email: Optional(\"foo@bar.com\"), phoneNumber: nil): name should not be empty.")
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.Person(name: nil, age: nil, email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: name should not be empty."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.Person(name: nil, age: nil, email: Optional(\"foo@bar.com\"), phoneNumber: nil): name should not be empty."])
             }
         }
         assertNoError {
@@ -270,11 +270,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try person.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(-1), email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: age should be greater than or equal to 0.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(-1), email: Optional(\"foo@bar.com\"), phoneNumber: nil): age should be greater than or equal to 0.")
                 
                 // Test property errors
                 let ageMessages = error.errorsFor(name: "age").map { $0.description }.sort()
-                XCTAssertEqual(ageMessages, ["ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(-1), email: Optional(\"foo@bar.com\"), phoneNumber: nil) validation error: age should be greater than or equal to 0."])
+                XCTAssertEqual(ageMessages, ["Invalid ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(-1), email: Optional(\"foo@bar.com\"), phoneNumber: nil): age should be greater than or equal to 0."])
             }
         }
         assertNoError {
@@ -283,11 +283,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try person.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: Optional(\"foo\"), phoneNumber: nil) validation error: email is invalid.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: Optional(\"foo\"), phoneNumber: nil): email is invalid.")
                 
                 // Test property errors
                 let emailMessages = error.errorsFor(name: "email").map { $0.description }.sort()
-                XCTAssertEqual(emailMessages, ["ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: Optional(\"foo\"), phoneNumber: nil) validation error: email is invalid."])
+                XCTAssertEqual(emailMessages, ["Invalid ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: Optional(\"foo\"), phoneNumber: nil): email is invalid."])
             }
         }
         assertNoError {
@@ -296,7 +296,7 @@ class PropertyValidationTests: ValidationTestCase {
                 try person.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: nil, phoneNumber: nil) validation error: Please provide an email or a phone number.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.Person(name: Optional(\"Arthur\"), age: Optional(35), email: nil, phoneNumber: nil): Please provide an email or a phone number.")
                 
                 // TODO: fetch and test global error "Please provide an email or a phone number."
             }
@@ -307,11 +307,11 @@ class PropertyValidationTests: ValidationTestCase {
                 try person.validate()
             } catch let error as ValidationError {
                 // Test full error description
-                XCTAssertEqual(error.description, "ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil) validation error: name should not be empty. ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil) validation error: Please provide an email or a phone number.")
+                XCTAssertEqual(error.description, "Invalid ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil): name should not be empty. Invalid ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil): Please provide an email or a phone number.")
                 
                 // Test property errors
                 let nameMessages = error.errorsFor(name: "name").map { $0.description }.sort()
-                XCTAssertEqual(nameMessages, ["ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil) validation error: name should not be empty."])
+                XCTAssertEqual(nameMessages, ["Invalid ValidationTests.Person(name: nil, age: nil, email: nil, phoneNumber: nil): name should not be empty."])
                 
                 // TODO: fetch and test global error "Please provide an email or a phone number."
             }
