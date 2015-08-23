@@ -52,7 +52,7 @@ Compare:
     }
 */
 public class ValidationPlan {
-    private var validationErrors = [ValidationError]()
+    private var errors = [ValidationError]()
     
     public init() { }
     
@@ -60,7 +60,7 @@ public class ValidationPlan {
         do {
             try block()
         } catch let error as ValidationError {
-            validationErrors.append(error)
+            errors.append(error)
         } catch {
             // TODO: should store and rethrow in validate()
             fatalError("Not a Validation error: \(error)")
@@ -69,13 +69,8 @@ public class ValidationPlan {
     }
     
     public func validate() throws {
-        switch validationErrors.count {
-        case 0:
-            break
-        case 1:
-            throw validationErrors.first!
-        default:
-            throw ValidationError(.Compound(mode: .And, errors: validationErrors))
+        if let error = ValidationError.compound(errors) {
+            throw error
         }
     }
 }

@@ -113,3 +113,44 @@ extension ValidationError : CustomStringConvertible {
         }
     }
 }
+
+extension ValidationError {
+    /// If errors is empty, returns nil. If error contains a single error,
+    /// returns this error. Otherwise, returns a compound error.
+    public static func compound(errors: [ValidationError]) -> ValidationError? {
+        return compound(errors, mode: .And)
+    }
+    
+    static func compound(errors: [ValidationError], mode: CompoundMode) -> ValidationError? {
+        switch errors.count {
+        case 0:
+            return nil
+        case 1:
+            return errors.first
+        default:
+            return ValidationError(.Compound(mode: mode, errors: errors))
+        }
+    }
+}
+
+extension ValidationError {
+    /// Returns all errors for a given name.
+    public func errorsFor(name name: String) -> [ValidationError] {
+        switch type {
+        case .Value:
+            return []
+        case .Named(let errorName, _):
+            if name == errorName {
+                return [self]
+            } else {
+                return []
+            }
+        case .Compound(_, let errors):
+            return errors.flatMap { $0.errorsFor(name: name) }
+        case .Global(_, let error):
+            return error.errorsFor(name: name)
+        case .Owned(_, let error):
+            return error.errorsFor(name: name)
+        }
+    }
+}

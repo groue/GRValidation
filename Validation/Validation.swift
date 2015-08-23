@@ -290,13 +290,10 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
             errors.append(error)
         }
         
-        switch errors.count {
-        case 0:
+        if let error = ValidationError.compound(errors) {
+            throw error
+        } else {
             return $0
-        case 1:
-            throw errors.first!
-        default:
-            throw ValidationError(.Compound(mode: .And, errors: errors))
         }
     }
 }
