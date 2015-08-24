@@ -83,6 +83,9 @@ public func ValidationMaximumFailedMessage<T where T: ForwardIndexType, T: Compa
 public func ValidationRangeFailedMessage<T where T: ForwardIndexType, T: Comparable>(range: Range<T>) -> String {
     return "should be in \(String(reflecting: range))."
 }
+public func ValidationRawValueFailedMessage<T where T:RawRepresentable>(type: T.Type) -> String {
+    return "is an invalid \(type)."
+}
 
 
 // MARK: - Validation
@@ -521,10 +524,9 @@ public struct ValidationNotElementOf<T: Equatable> : ValidationType {
 public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
     public func validate(value: T.RawValue?) throws -> T {
-        // TODO: the RawRepresentable type should be readable in the error message.
-        let value = try validateNotNil(value, message: ValidationFailedMessage())
+        let value = try validateNotNil(value, message: ValidationRawValueFailedMessage(T.self))
         guard let result = T(rawValue: value) else {
-            throw ValidationError(value: value, message: ValidationFailedMessage())
+            throw ValidationError(value: value, message: ValidationRawValueFailedMessage(T.self))
         }
         return result
     }

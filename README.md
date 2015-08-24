@@ -85,7 +85,7 @@ enum Color : Int {
 }
 let v = ValidationRawValue<Color>()
 try v.validate(0)   // OK: Color.Red
-try v.validate(3)   // ValidationError: 3 is invalid.
+try v.validate(3)   // ValidationError: 3 is an invalid Color.
 ```
 
 

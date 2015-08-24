@@ -25,6 +25,12 @@
 import XCTest
 import Validation
 
+enum Enum: Int {
+    case Zero
+    case One
+    case Two
+}
+
 class ValueValidationTests: ValidationTestCase {
     
     func testValidation() {
@@ -165,20 +171,15 @@ class ValueValidationTests: ValidationTestCase {
     }
     
     func testValidationRawValue() {
-        enum Enum: Int {
-            case Zero
-            case One
-            case Two
-        }
         let v = ValidationRawValue<Enum>()
         assertNoError() {
             let result = try v.validate(1)
             XCTAssertEqual(result, Enum.One)
         }
-        assertValidationError("5 is invalid.") {
+        assertValidationError("5 is an invalid Enum.") {
             try v.validate(5)
         }
-        assertValidationError("nil is invalid.") {
+        assertValidationError("nil is an invalid Enum.") {
             try v.validate(nil)
         }
     }
