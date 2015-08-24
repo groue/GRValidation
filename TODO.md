@@ -16,3 +16,4 @@
 - [ ] One can change the description of a value validation. This is not the same as localizing a validation error. Example: "should contain the @ sign" is a better description for ValidationRegularExpression(pattern:"@").
 - [X] Operator ~= so that one can make a boolean check of a validation. Implies operator !
 - [ ] Model Validation should be a case of Value Validation. What prevent us from doing that: mutating validations + we'd like model validation code to avoid using `self` or `$0` everywhere.
+- [ ] `&&` operator should return the value of the right validation, when both output types are compatible.
