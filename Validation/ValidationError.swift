@@ -31,6 +31,10 @@ public struct ValidationError : ErrorType {
         self.init(.Value(value: value, message: message ?? ValidationFailedMessage()))
     }
     
+    public init(value: Any, message: String, propertyNames: [String]) {
+        self.init(.Model(value: value, message: message, propertyNames: propertyNames, error: nil))
+    }
+    
     
     // not public
     
@@ -43,11 +47,13 @@ public struct ValidationError : ErrorType {
         /// Error on a value
         case Value(value: Any?, message: String)
         
-        /// Error on a model
-        case Model(model: Any, propertyNames: [String], message: String, error: ValidationError)
+        // TODO: the Model and Property cases are a conceptual mess.
         
-        /// Error on a model property
-        case Property(model: Any, propertyName: String, error: ValidationError)
+        /// Error on a model
+        case Model(value: Any, message: String, propertyNames: [String], error: ValidationError?)
+        
+        /// Error on a property
+        case Property(value: Any, propertyName: String, error: ValidationError)
         
         /// Compound errors
         case Compound(mode: CompoundMode, errors: [ValidationError])
@@ -75,10 +81,10 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Property(let model, let propertyName, let error):
-            return "Invalid \(String(reflecting: model)): \(error.description(propertyName))"
-        case .Model(let model, _, let message, _):
-            return "Invalid \(String(reflecting: model)): \(message)"
+        case .Property(let value, let propertyName, let error):
+            return "Invalid \(String(reflecting: value)): \(error.description(propertyName))"
+        case .Model(let value, let message, _, _):
+            return "Invalid \(String(reflecting: value)): \(message)"
         case .Compound(let mode, let errors):
             switch mode {
             case .Or:
@@ -131,7 +137,7 @@ extension ValidationError {
             } else {
                 return []
             }
-        case .Model(_, let propertyNames, _, _):
+        case .Model(_, _, let propertyNames, _):
             if propertyNames.contains(propertyName) {
                 return [self]
             } else {

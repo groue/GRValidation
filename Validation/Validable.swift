@@ -42,7 +42,7 @@ extension Validable {
         do {
             return try validation.validate()
         } catch let error as ValidationError {
-            throw ValidationError(.Property(model: self, propertyName: propertyName, error: error))
+            throw ValidationError(.Property(value: self, propertyName: propertyName, error: error))
         }
     }
     
@@ -64,7 +64,7 @@ extension Validable {
         do {
             try validation.validate()
         } catch let error as ValidationError {
-            throw ValidationError(.Model(model: self, propertyNames: propertyNames, message: message, error: error))
+            throw ValidationError(.Model(value: self, message: message, propertyNames: propertyNames, error: error))
         }
     }
 }

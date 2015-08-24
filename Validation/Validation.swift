@@ -151,37 +151,18 @@ public prefix func !<Validation: ValidationType>(validation: Validation) -> AnyV
 
 infix operator >>> { associativity left precedence 160 }
 
-// V(T -> U) >>> V(U -> V)
-// FIXME? Unused today, because validations usually have an optional tested type, and a non-optional valid type.
 public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
-/**
-Example:
-
-    ValidationNotNil() >>> ValidationStringNotEmpty()
-*/
 public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
-// ValidationNotNil() >>> { f($0) } TODO: is it a flatMap?
-// FIXME: this is unused today.
-public func >>> <Left : ValidationType, ValidType>(left: Left, right: (Left.ValidType) -> ValidType) -> AnyValidation<Left.TestedType, ValidType> {
-    return AnyValidation { try right(left.validate($0)) }
-}
-
-//// { $0.name } >>> ValidationNotNil()
-// Unused today
-//public func >>> <T, Right : ValidationType>(left: (T) -> Right.TestedType, right: Right) -> AnyValidation<T, Right.ValidType> {
-//    return AnyValidation { try right.validate(left($0)) }
-//}
-
 /**
 Example:
 
-    try validate("Value1 or Value2 must be not nil.", with: (value1 >>> ValidationNotNil() || value2 >>> ValidationNotNil()))
+    "foo" >>> ValidationNotNil()
 */
 public func >>> <T, Right : ValidationType where Right.TestedType == T>(left: T, right: Right) -> AnyValidation<Void, Right.ValidType> {
     return AnyValidation { try right.validate(left) }

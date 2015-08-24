@@ -133,17 +133,31 @@ struct Person : Validable {
             }
             .append {
                 // An email or a phone number is required.
-                // TODO: rewrite this in a more straightforward way: if email == nil && phoneNumber == nil { throw ValidationError(...) }
-                try validate(
-                    properties: ["email", "phoneNumber"],
-                    message: "Please provide an email or a phone number.",
-                    with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
+                
+//                // FIXME: this syntax does not work. Too complex, and nobody can remember it.
+//                // TODO: rewrite this in a more straightforward way: if email == nil && phoneNumber == nil { throw ValidationError(...) }
+//                try validate(
+//                    properties: ["email", "phoneNumber"],
+//                    message: "Please provide an email or a phone number.",
+//                    with: email >>> ValidationNotNil() || phoneNumber >>> ValidationNotNil())
+
+                if email == nil && phoneNumber == nil {
+                    // TODO: This syntax is similar to value validation errors: ValidationError(value: 1, message: "should be nil").
+                    // Thus the message should be "requires an email or a phone number", not a full sentence as "Please provide an email or a phone number."
+                    // But now, the generated error should then be "Person requires an email or a phone number".
+                    // Well, the description of property errors are like "Invalid Person: name should be nil.".
+                    // All those sentences are not consistent. We need to fix that.
+                    //
+                    // TODO: test that this error is associated with both email and phoneNumber properties.
+                    throw ValidationError(value: self, message: "Please provide an email or a phone number.", propertyNames: ["email", "phoneNumber"])
+                }
+                
             }
             .validate()
     }
 }
 
-class ModelValidationTests: ValidationTestCase {
+class ValidableTests: ValidationTestCase {
     
     func testSimpleModel() {
         assertNoError {
