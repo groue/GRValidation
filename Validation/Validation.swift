@@ -149,7 +149,7 @@ public prefix func !<Validation: ValidationType>(validation: Validation) -> AnyV
 
 // MARK: - Composed Validations
 
-infix operator >>> { associativity left precedence 130 }
+infix operator >>> { associativity left precedence 160 }
 
 // V(T -> U) >>> V(U -> V)
 // FIXME? Unused today, because validations usually have an optional tested type, and a non-optional valid type.
