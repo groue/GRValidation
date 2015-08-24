@@ -14,3 +14,4 @@
 - [ ] Distinguish property validation error from named validation error ("User has invalid name" vs. "Name is invalid" which applies to UITextFields for example)
 - [X] A model should be able, in the same time, to 1. store transformed properties (through a phone number validation that returns an internationally formatted phone number) 2. get a full list of validation errors on the model. Without having to write a complex do catch dance.
 - [ ] One can change the description of a value validation. This is not the same as localizing a validation error. Example: "should contain the @ sign" is a better description for ValidationRegularExpression(pattern:"@").
+- [ ] Operator ~= so that one can make a boolean check of a validation. Implies operator !

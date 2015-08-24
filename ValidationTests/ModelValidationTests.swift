@@ -133,6 +133,7 @@ struct Person : Validable {
             }
             .append {
                 // An email or a phone number is required.
+                // TODO: rewrite this in a more straightforward way: if email == nil && phoneNumber == nil { throw ValidationError(...) }
                 try validate(
                     properties: ["email", "phoneNumber"],
                     message: "Please provide an email or a phone number.",
