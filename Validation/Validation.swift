@@ -119,6 +119,31 @@ public struct AnyValidation<TestedType, ValidType> : ValidationType {
 }
 
 
+// MARK: - Boolean check
+
+public func ~=<Validation: ValidationType>(left: Validation, right: Validation.TestedType) -> Bool {
+    do {
+        try left.validate(right)
+        return true
+    } catch is ValidationError {
+        return false
+    } catch {
+        fatalError("Unexpected error \(error)")
+    }
+}
+
+
+public prefix func !<Validation: ValidationType>(validation: Validation) -> AnyValidation<Validation.TestedType, Validation.TestedType> {
+    return AnyValidation {
+        if validation ~= $0 {
+            throw ValidationError(value: $0, message: ValidationFailedMessage())
+        } else {
+            return $0
+        }
+    }
+}
+
+
 // MARK: - Composed Validations
 
 infix operator >>> { associativity left precedence 130 }

@@ -365,7 +365,7 @@ class ValueValidationTests: ValidationTestCase {
         }
     }
     
-    func testComposedValidation() {
+    func testChainOperator() {
         let v = ValidationNotNil() >>> ValidationStringLength(minimum: 1)
         assertNoError() {
             let result = try v.validate("foo")
@@ -379,7 +379,7 @@ class ValueValidationTests: ValidationTestCase {
         }
     }
     
-    func testOrValidation() {
+    func testOrOperator() {
         let v = ValidationNil<String>() || ValidationStringLength(minimum: 1)
         assertNoError() {
             let result = try v.validate("foo")
@@ -394,7 +394,7 @@ class ValueValidationTests: ValidationTestCase {
         }
     }
     
-    func testAndValidation() {
+    func testAndOperator() {
         let v = AnyValidation { (value: Int) -> String in
             guard value % 2 == 1 else { throw ValidationError(value: value, message: "should be odd.") }
             return "foo"
@@ -414,6 +414,31 @@ class ValueValidationTests: ValidationTestCase {
         }
         assertValidationError("12 should be odd. 12 should be less than 10.") {
             try v.validate(12)
+        }
+    }
+    
+    func testNotOperator() {
+        let v = !ValidationEqual(1)
+        assertNoError() {
+            let result = try v.validate(2)
+            XCTAssertEqual(result, 2)
+        }
+        assertNoError() {
+            try v.validate(nil)
+        }
+        assertValidationError("Optional(1) is invalid.") {
+            try v.validate(1)
+        }
+    }
+    
+    func testMatchOperator() {
+        let v = ValidationEqual(1)
+        XCTAssertTrue(v ~= 1)
+        switch 1 {
+        case v:
+            break
+        default:
+            XCTFail("Expected 1 to match ValidationEqual(1)")
         }
     }
 }

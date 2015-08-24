@@ -50,6 +50,7 @@
 		56821AE91B87428500C26878 /* Validable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Validable.swift; sourceTree = "<group>"; };
 		5686252A1B89ECF6002E29A7 /* Validation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Validation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		568625361B89ED2E002E29A7 /* ValidationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ValidationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		56E3E9AF1B8AEA8D00D19912 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		56F4ED4F1B85CCF900DA5B88 /* Validation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Validation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		56F4ED521B85CCF900DA5B88 /* Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Validation.h; sourceTree = "<group>"; };
 		56F4ED541B85CCF900DA5B88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -98,6 +99,7 @@
 		56F4ED451B85CCF900DA5B88 = {
 			isa = PBXGroup;
 			children = (
+				56E3E9AF1B8AEA8D00D19912 /* TODO.md */,
 				56F4ED511B85CCF900DA5B88 /* Validation */,
 				56F4ED5D1B85CCF900DA5B88 /* ValidationTests */,
 				56F4ED501B85CCF900DA5B88 /* Products */,
@@ -594,6 +596,7 @@
 				568625311B89ECF6002E29A7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		5686253E1B89ED2F002E29A7 /* Build configuration list for PBXNativeTarget "ValidationiOSTests" */ = {
 			isa = XCConfigurationList;
@@ -602,6 +605,7 @@
 				568625401B89ED2F002E29A7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		56F4ED491B85CCF900DA5B88 /* Build configuration list for PBXProject "Validation" */ = {
 			isa = XCConfigurationList;
