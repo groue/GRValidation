@@ -13,6 +13,7 @@ Features
 - Value validation
 - Value reparation
 - Complex model validation
+- Detailed error messages
 
 Missing features so far:
 
