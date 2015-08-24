@@ -521,6 +521,7 @@ public struct ValidationNotElementOf<T: Equatable> : ValidationType {
 public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
     public init() { }
     public func validate(value: T.RawValue?) throws -> T {
+        // TODO: the RawRepresentable type should be readable in the error message.
         let value = try validateNotNil(value, message: ValidationFailedMessage())
         guard let result = T(rawValue: value) else {
             throw ValidationError(value: value, message: ValidationFailedMessage())
