@@ -97,7 +97,7 @@ let positiveInt = ValidationRange(minimum: 0)
 try positiveInt.validate(-1)    // Throws a ValidationError
 ```
 
-You may also perform a simple boolean check with the `~=` operator, or a classic case 
+You may also perform a simple boolean check with the `~=` operator, or via pattern matching:
 
 ```swift
 positiveInt ~= 10  // true
