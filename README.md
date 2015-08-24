@@ -137,9 +137,9 @@ case positiveInt:
 
 Basic Value Validations can be chained, or composed using boolean operators:
 
-- `V1 >>> V2`
+- `v1 >>> v2`
     
-    Chains two validations. Returns the value returned by V2.
+    Chains two validations. Returns the value returned by v2.
     
     ```swift
     // Checks that a string matches a regular expression, after trimming:
@@ -148,9 +148,9 @@ Basic Value Validations can be chained, or composed using boolean operators:
     try v.validate("foo")   // ValidationError
     ```
     
-- `V1 || V2`
+- `v1 || v2`
     
-    Returns the value returned by the first validation that passes, or the input value when output types don't match.
+    Checks that a value passes at least one validation. Returns the value returned by the first validation that passes, or the input value when output types don't match.
     
     ```swift
     // Checks that an Int is not nil and equal to 1 or 2:
@@ -160,9 +160,9 @@ Basic Value Validations can be chained, or composed using boolean operators:
     try v.validate(3) // ValidationError
     ```
     
-- `V1 && V2`
+- `v1 && v2`
     
-    Checks that a value passes all validations. The returned value is the input value.
+    Checks that a value passes both validations. Returns the value returned by v2.
     
     ```swift
     // Checks that an Int is nil, or not 1, and not 2:
@@ -172,7 +172,7 @@ Basic Value Validations can be chained, or composed using boolean operators:
     try v.validate(3) // 3
     ```
     
-- `!`
+- `!v1`
 
     Inverts a validation. Returns the input value, or throws a generic "is invalid." error.
     

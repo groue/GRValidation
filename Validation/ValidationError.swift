@@ -27,8 +27,8 @@ A Validation Error
 */
 public struct ValidationError : ErrorType {
     
-    public init(value: Any?, message: String) {
-        self.init(.Value(value: value, message: message))
+    public init(value: Any?, message: String? = nil) {
+        self.init(.Value(value: value, message: message ?? ValidationFailedMessage()))
     }
     
     

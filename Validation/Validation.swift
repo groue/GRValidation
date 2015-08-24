@@ -225,6 +225,25 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
 /**
 Example:
 
+    ValidationRange(minimum: 0) || ValidationNil()
+*/
+public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+    return AnyValidation {
+        do {
+            return try left.validate($0)
+        } catch let leftError as ValidationError {
+            do {
+                return try right.validate($0)
+            } catch let rightError as ValidationError {
+                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+            }
+        }
+    }
+}
+
+/**
+Example:
+
     name >>> ValidationNotNil() || integers >>> ValidationCollectionNotEmpty()
 */
 public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
@@ -246,28 +265,9 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
 /**
 Example:
 
-    ValidationRange(minimum: 0) || ValidationNil()
+    ValidationNotEqual(1) && ValidationNotEqual(2)
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
-    return AnyValidation {
-        do {
-            return try left.validate($0)
-        } catch let leftError as ValidationError {
-            do {
-                return try right.validate($0)
-            } catch let rightError as ValidationError {
-                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
-            }
-        }
-    }
-}
-
-/**
-Example:
-
-    ValidationRegularExpression(pattern: "foo") && ValidationRegularExpression(pattern: "bar")
-*/
-public func &&<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+public func &&<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Right.TestedType, Right.ValidType> {
     return AnyValidation {
         var errors = [ValidationError]()
         
@@ -277,8 +277,9 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
             errors.append(error)
         }
         
+        var result: Right.ValidType? = nil
         do {
-            try right.validate($0)
+            result = try right.validate($0)
         } catch let error as ValidationError {
             errors.append(error)
         }
@@ -286,11 +287,10 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
         if let error = ValidationError.compound(errors) {
             throw error
         } else {
-            return $0
+            return result!
         }
     }
 }
-
 
 
 // MARK: - Validations for any type
