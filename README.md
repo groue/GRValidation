@@ -38,10 +38,21 @@ Precisely speaking, **Value Validation** throws errors like "12 should be greate
 - **Mutating validations**. This is value reparation, put to some use: for example, after successful validation of a user-provided phone number, one wants to store its formatted version.
 
 
-Those two realms are represented by the two protocols `ValidationType` and `Validable`.
+Documentation
+-------------
+
+- [Value Validation](#value-validation)
+    - [The ValidationType Protocol](#the-validationtype-protocol)
+    - [ValidationError vs Boolean Check](#validationerror-vs-boolean-check)
+    - [Built-in Value Validations](#built-in-value-validations)
+    - [Composed Validations](#composed-validations)
+- [Model Validation](#model-validation)
+    - [The Validable Protocol](#the-validable-protocol)
 
 
-### ValidationType
+## Value Validation
+
+### The ValidationType Protocol
 
 **ValidationType** is a protocol that checks a value of type TestedType, and eventually returns a value of type ValidType, or throws a ValidationError:
 
@@ -66,21 +77,115 @@ try v.validate(-1)  // ValidationError: -1 should be greater than or equal to 0.
 The returned value may be different from the input:
 
 ```swift
-// Enum raw value
 enum Color : Int {
     case Red
     case White
     case Rose
 }
 let v = ValidationRawValue<Color>()
-try v.validate(0)   // OK: .Red
+try v.validate(0)   // OK: Color.Red
 try v.validate(3)   // ValidationError: 3 is invalid.
 ```
 
-See the full list of [built-in Value Validations](#built-in-value-validations) and the ways to [compose](#composed-validations) them.
+
+### ValidationError vs Boolean Check
+
+The validate() method may throw a ValidationError:
+
+```swift
+let positiveInt = ValidationRange(minimum: 0)
+try positiveInt.validate(-1)    // Throws a ValidationError
+```
+
+You may also perform a simple boolean check with the `~=` operator, or a classic case 
+
+```swift
+positiveInt ~= 10  // true
+positiveInt ~= -1  // false
+
+switch int {
+case positiveInt:
+    // int passes validation
+    ...
+}
+```
 
 
-### Validable
+### Built-in Value Validations
+
+| Validation type              | TestedType      | ValidType       |            |
+|:---------------------------- |:--------------- |:--------------- |:---------- |
+| Validation                   | T               | T               | All values pass. |
+| ValidationFailure            | T               | T               | All values fail. |
+| ValidationNil                | T?              | T?              | Checks that input is nil. |
+| ValidationNotNil             | T?              | T               | Checks that input is not nil. |
+| ValidationTrim               | String?         | String?         | All strings pass. Non nil strings are trimmed. |
+| ValidationStringLength       | String?         | String          | Checks that a string is not nil and has length in a specific range. |
+| ValidationRegularExpression  | String?         | String          | Checks that a string is not nil and matches a regular expression. |
+| ValidationCollectionNotEmpty | CollectionType? | CollectionType  | Checks that a collection is not nil and not empty. |
+| ValidationCollectionEmpty    | CollectionType? | CollectionType? | Checks that a collection is nil or empty. |
+| ValidationEqual              | T? where T:Equatable | T          | Checks that a value is not nil and equal to a reference value. |
+| ValidationNotEqual           | T? where T:Equatable | T?         | Checks that a value is nil or not equal to a reference value. |
+| ValidationElementOf          | T? where T:Equatable | T          | Checks that a value is not nil and member of a reference collection. |
+| ValidationNotElementOf       | T? where T:Equatable | T?         | Checks that a value is nil or not member of a reference collection. |
+| ValidationRawValue           | T.RawValue? where T: RawRepresentable | T | Checks that a value is not nil and a valid raw value for type T. |
+| ValidationRange              | T? where T: ForwardIndexType, T: Comparable | T | Checks that a value is not nil and in a specific range. |
+
+
+### Composed Validations
+
+Basic Value Validations can be chained, or composed using boolean operators:
+
+- `V1 >>> V2`
+    
+    Chains two validations. Returns the value returned by V2.
+    
+    ```swift
+    // Checks that a string matches a regular expression, after trimming:
+    let v = ValidationTrim() >>> ValidationRegularExpression(pattern: "^[0-9]+$")
+    try v.validate(" 123 ") // "123"
+    try v.validate("foo")   // ValidationError
+    ```
+    
+- `V1 || V2`
+    
+    Returns the value returned by the first validation that passes, or the input value when output types don't match.
+    
+    ```swift
+    // Checks that an Int is not nil and equal to 1 or 2:
+    let v = ValidationEqual(1) || ValidationEqual(2)
+    try v.validate(1) // 1
+    try v.validate(2) // 2
+    try v.validate(3) // ValidationError
+    ```
+    
+- `V1 && V2`
+    
+    Checks that a value passes all validations. The returned value is the input value.
+    
+    ```swift
+    // Checks that an Int is nil, or not 1, and not 2:
+    let v = ValidationNotEqual(1) && ValidationNotEqual(2)
+    try v.validate(1) // ValidationError
+    try v.validate(2) // ValidationError
+    try v.validate(3) // 3
+    ```
+    
+- `!`
+
+    Inverts a validation. Returns the input value, or throws a generic "is invalid." error.
+    
+    ```swift
+    // Checks that an Int is not 1.
+    let v = !ValidationEqual(1)
+    try v.validate(1) // ValidationError
+    try v.validate(2) // 2
+    ```
+
+
+## Model Validation
+
+### The Validable Protocol
 
 The **Validable** protocol provides methods that help validating models.
 
@@ -178,49 +283,4 @@ try person.validate()
 var person = Person(name: "Arthur", age: 35, email: "foo", phoneNumber: nil)
 try person.validate()
 // Invalid Person: email is invalid.
-```
-
-
-Built-in Value Validations
---------------------------
-
-| Validation type              | TestedType      | ValidType       |            |
-|:---------------------------- |:--------------- |:--------------- |:---------- |
-| Validation                   | T               | T               | All values pass. |
-| ValidationFailure            | T               | T               | All values fail. |
-| ValidationNil                | T?              | T?              | Checks that input is nil. |
-| ValidationNotNil             | T?              | T               | Checks that input is not nil. |
-| ValidationTrim               | String?         | String?         | All strings pass. Non nil strings are trimmed. |
-| ValidationStringLength       | String?         | String          | Checks that a string is not nil and has length in a specific range. |
-| ValidationRegularExpression  | String?         | String          | Checks that a string is not nil and matches a regular expression. |
-| ValidationCollectionNotEmpty | CollectionType? | CollectionType  | Checks that a collection is not nil and not empty. |
-| ValidationCollectionEmpty    | CollectionType? | CollectionType? | Checks that a collection is nil or empty. |
-| ValidationEqual              | T? where T:Equatable | T          | Checks that a value is not nil and equal to a reference value. |
-| ValidationNotEqual           | T? where T:Equatable | T?         | Checks that a value is nil or not equal to a reference value. |
-| ValidationElementOf          | T? where T:Equatable | T          | Checks that a value is not nil and member of a reference collection. |
-| ValidationNotElementOf       | T? where T:Equatable | T?         | Checks that a value is nil or not member of a reference collection. |
-| ValidationRawValue           | T.RawValue? where T: RawRepresentable | T | Checks that a value is not nil and a valid raw value for type T. |
-| ValidationRange              | T? where T: ForwardIndexType, T: Comparable | T | Checks that a value is not nil and in a specific range. |
-
-
-Composed Validations
---------------------
-
-| Operator |           |
-|:-------- |:--------- |
-| `||`     | Returns the value returned by the first validation that passes, or the input value when output types don't match. |
-| `&&`     | Checks that a value passes all validations. The returned value is the input value. |
-| `>>>`    | Chains two validations. Returns the value returned by the right validation. |
-
-Examples:
-
-```swift
-// Checks that an Int is not nil and equal to 1 or 2:
-let v = ValidationEqual(1) || ValidationEqual(2)
-
-// Checks that an Int is nil, or not 1, and not 2:
-let v = ValidationNotEqual(1) && ValidationNotEqual(2)
-
-// Checks that a string matches a regular expression, after trimming:
-let v = ValidationTrim() >>> ValidationRegularExpression(pattern: "^a+$")
 ```

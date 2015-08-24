@@ -432,13 +432,17 @@ class ValueValidationTests: ValidationTestCase {
     }
     
     func testMatchOperator() {
-        let v = ValidationEqual(1)
+        let v = ValidationRange(range: 1..<10)
+        
+        // Operator
         XCTAssertTrue(v ~= 1)
+        
+        // Switch
         switch 1 {
         case v:
             break
         default:
-            XCTFail("Expected 1 to match ValidationEqual(1)")
+            XCTFail("Expected 1 to match \(v)")
         }
     }
 }
