@@ -5,6 +5,8 @@ GRValidation is a validation toolkit for Swift 2.
 
 It lets you validate both simple values and complex models, and won't let you down when your validations leave the trivial zone.
 
+**August 25, 2015: GRValidation 0.2.0 is out** - [Release notes](RELEASE_NOTES.md). Follow [@groue](http://twitter.com/groue) on Twitter for release announcements and usage tips.
+
 
 Features
 --------
