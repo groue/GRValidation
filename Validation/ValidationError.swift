@@ -100,7 +100,7 @@ extension ValidationError : CustomStringConvertible {
                         found.insert(description)
                     }
                 }
-                return " ".join(uniq)
+                return uniq.joinWithSeparator(" ")
             }
         }
     }
