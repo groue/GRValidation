@@ -251,6 +251,7 @@
 				TargetAttributes = {
 					568625291B89ECF6002E29A7 = {
 						CreatedOnToolsVersion = 7.0;
+						LastSwiftMigration = 0820;
 					};
 					568625351B89ED2E002E29A7 = {
 						CreatedOnToolsVersion = 7.0;
@@ -392,6 +393,7 @@
 				PRODUCT_NAME = Validation;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				SWIFT_WHOLE_MODULE_OPTIMIZATION = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -414,6 +416,7 @@
 				PRODUCT_NAME = Validation;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				SWIFT_WHOLE_MODULE_OPTIMIZATION = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;

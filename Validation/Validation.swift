@@ -42,20 +42,20 @@ public func ValidationNotEmptyFailedMessage() -> String {
 public func ValidationEmptyFailedMessage() -> String {
     return "should be empty."
 }
-public func ValidationEqualFailedMessage<T: Equatable>(value: T) -> String {
+public func ValidationEqualFailedMessage<T: Equatable>(_ value: T) -> String {
     return "should be equal to \(String(reflecting: value))."
 }
-public func ValidationNotEqualFailedMessage<T: Equatable>(value: T) -> String {
+public func ValidationNotEqualFailedMessage<T: Equatable>(_ value: T) -> String {
     return "should not be equal to \(String(reflecting: value))."
 }
-public func ValidationStringLengthMinimumFailedMessage(length: Int) -> String {
+public func ValidationStringLengthMinimumFailedMessage(_ length: Int) -> String {
     if length == 1 {
         return ValidationNotEmptyFailedMessage()
     } else {
         return "should contain at least \(length) characters."
     }
 }
-public func ValidationStringLengthMaximumFailedMessage(length: Int) -> String {
+public func ValidationStringLengthMaximumFailedMessage(_ length: Int) -> String {
     switch length {
     case 0:
         return ValidationEmptyFailedMessage()
@@ -65,25 +65,25 @@ public func ValidationStringLengthMaximumFailedMessage(length: Int) -> String {
         return "should contain at most \(length) characters."
     }
 }
-public func ValidationStringLengthRangeFailedMessage(range: Range<Int>) -> String {
+public func ValidationStringLengthRangeFailedMessage(_ range: Range<Int>) -> String {
     return "length should be in \(range)."
 }
-public func ValidationElementFailedMessage<C where C: CollectionType>(collection: C) -> String {
+public func ValidationElementFailedMessage<C>(_ collection: C) -> String where C: Collection {
     return "should be in \(collection)."
 }
-public func ValidationNotElementFailedMessage<C where C: CollectionType>(collection: C) -> String {
+public func ValidationNotElementFailedMessage<C>(_ collection: C) -> String where C: Collection {
     return "should not be in \(collection)."
 }
-public func ValidationMinimumFailedMessage<T where T: ForwardIndexType, T: Comparable>(value: T) -> String {
+public func ValidationMinimumFailedMessage<T>(_ value: T) -> String where T: Comparable, T: Comparable {
     return "should be greater than or equal to \(String(reflecting: value))."
 }
-public func ValidationMaximumFailedMessage<T where T: ForwardIndexType, T: Comparable>(value: T) -> String {
+public func ValidationMaximumFailedMessage<T>(_ value: T) -> String where T: Comparable, T: Comparable {
     return "should be less than or equal to \(String(reflecting: value))."
 }
-public func ValidationRangeFailedMessage<T where T: ForwardIndexType, T: Comparable>(range: Range<T>) -> String {
+public func ValidationRangeFailedMessage<T>(_ range: Range<T>) -> String where T: Comparable, T: Comparable {
     return "should be in \(String(reflecting: range))."
 }
-public func ValidationRawValueFailedMessage<T where T:RawRepresentable>(type: T.Type) -> String {
+public func ValidationRawValueFailedMessage<T>(_ type: T.Type) -> String where T:RawRepresentable {
     return "is an invalid \(type)."
 }
 
@@ -91,15 +91,15 @@ public func ValidationRawValueFailedMessage<T where T:RawRepresentable>(type: T.
 // MARK: - Validation
 
 public protocol ValidationType {
-    typealias TestedType
-    typealias ValidType
-    func validate(value: TestedType) throws -> ValidType
+    associatedtype TestedType
+    associatedtype ValidType
+    func validate(_ value: TestedType) throws -> ValidType
 }
 
 extension ValidationType {
-    public func validateNotNil<T>(value: T?, message: String = ValidationNotNilFailedMessage()) throws -> T {
+    public func validateNotNil<T>(_ value: T?, message: String = ValidationNotNilFailedMessage()) throws -> T {
         guard let value = value else {
-            throw ValidationError(.Value(value: nil, message: message))
+            throw ValidationError(.value(value: nil, message: message))
         }
         return value
     }
@@ -108,17 +108,17 @@ extension ValidationType {
 /// A type-erased validation.
 public struct AnyValidation<TestedType, ValidType> : ValidationType {
     /// Wrap and forward operations to `base`.
-    public init<V: ValidationType where V.TestedType == TestedType, V.ValidType == ValidType>(_ base: V) {
+    public init<V: ValidationType>(_ base: V) where V.TestedType == TestedType, V.ValidType == ValidType {
         self.init { return try base.validate($0) }
     }
     /// Create a validation whose `validate()` method forwards to `block`.
-    public init(_ block: (TestedType) throws -> ValidType) {
+    public init(_ block: @escaping (TestedType) throws -> ValidType) {
         self.block = block
     }
-    public func validate(value: TestedType) throws -> ValidType {
+    public func validate(_ value: TestedType) throws -> ValidType {
         return try block(value)
     }
-    private let block: (TestedType) throws -> ValidType
+    fileprivate let block: (TestedType) throws -> ValidType
 }
 
 
@@ -151,11 +151,11 @@ public prefix func !<Validation: ValidationType>(validation: Validation) -> AnyV
 
 infix operator >>> { associativity left precedence 160 }
 
-public func >>> <Left : ValidationType, Right : ValidationType where Left.ValidType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+public func >>> <Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> where Left.ValidType == Right.TestedType {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
-public func >>> <Left : ValidationType, Right : ValidationType where Right.TestedType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+public func >>> <Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> where Right.TestedType == Optional<Left.ValidType> {
     return AnyValidation { try right.validate(left.validate($0)) }
 }
 
@@ -164,7 +164,7 @@ Example:
 
     "foo" >>> ValidationNotNil()
 */
-public func >>> <T, Right : ValidationType where Right.TestedType == T>(left: T, right: Right) -> AnyValidation<Void, Right.ValidType> {
+public func >>> <T, Right : ValidationType>(left: T, right: Right) -> AnyValidation<Void, Right.ValidType> where Right.TestedType == T {
     return AnyValidation { try right.validate(left) }
 }
 
@@ -173,7 +173,7 @@ Example:
 
     ValidationNil<String>() || ValidationStringLength(minimum: 1)
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Right.ValidType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
+public func ||<Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> where Left.TestedType == Right.TestedType, Left.ValidType == Right.ValidType {
     return AnyValidation {
         do {
             return try left.validate($0)
@@ -181,7 +181,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 return try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+                throw ValidationError(.compound(mode: .or, errors: [leftError, rightError]))
             }
         }
     }
@@ -192,7 +192,7 @@ Example:
 
     ValidationNil() || ValidationRange(minimum: 0)
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Left.ValidType == Optional<Right.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> {
+public func ||<Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.ValidType> where Left.TestedType == Right.TestedType, Left.ValidType == Optional<Right.ValidType> {
     return AnyValidation {
         do {
             return try left.validate($0)
@@ -200,7 +200,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 return try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+                throw ValidationError(.compound(mode: .or, errors: [leftError, rightError]))
             }
         }
     }
@@ -211,7 +211,7 @@ Example:
 
     ValidationRange(minimum: 0) || ValidationNil()
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType>>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> {
+public func ||<Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Right.ValidType> where Left.TestedType == Right.TestedType, Right.ValidType == Optional<Left.ValidType> {
     return AnyValidation {
         do {
             return try left.validate($0)
@@ -219,7 +219,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
             do {
                 return try right.validate($0)
             } catch let rightError as ValidationError {
-                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+                throw ValidationError(.compound(mode: .or, errors: [leftError, rightError]))
             }
         }
     }
@@ -230,7 +230,7 @@ Example:
 
     name >>> ValidationNotNil() || integers >>> ValidationCollectionNotEmpty()
 */
-public func ||<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> {
+public func ||<Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Left.TestedType, Left.TestedType> where Left.TestedType == Right.TestedType {
     return AnyValidation {
         do {
             try left.validate($0)
@@ -240,7 +240,7 @@ public func ||<Left : ValidationType, Right : ValidationType where Left.TestedTy
                 try right.validate($0)
                 return $0
             } catch let rightError as ValidationError {
-                throw ValidationError(.Compound(mode: .Or, errors: [leftError, rightError]))
+                throw ValidationError(.compound(mode: .or, errors: [leftError, rightError]))
             }
         }
     }
@@ -251,7 +251,7 @@ Example:
 
     ValidationNotEqual(1) && ValidationNotEqual(2)
 */
-public func &&<Left : ValidationType, Right : ValidationType where Left.TestedType == Right.TestedType>(left: Left, right: Right) -> AnyValidation<Right.TestedType, Right.ValidType> {
+public func &&<Left : ValidationType, Right : ValidationType>(left: Left, right: Right) -> AnyValidation<Right.TestedType, Right.ValidType> where Left.TestedType == Right.TestedType {
     return AnyValidation {
         var errors = [ValidationError]()
         
@@ -283,7 +283,7 @@ public func &&<Left : ValidationType, Right : ValidationType where Left.TestedTy
 public struct Validation<T> : ValidationType {
     public init() { }
     public init(type: T.Type) { }   // Allows protocol extensions to instanciate Validation of type Self
-    public func validate(value: T) throws -> T {
+    public func validate(_ value: T) throws -> T {
         return value
     }
 }
@@ -291,7 +291,7 @@ public struct Validation<T> : ValidationType {
 /// A validation for type T which always fails.
 public struct ValidationFailure<T> : ValidationType {
     public init() { }
-    public func validate(value: T) throws -> T {
+    public func validate(_ value: T) throws -> T {
         throw ValidationError(value: value, message: ValidationFailedMessage())
     }
 }
@@ -299,7 +299,7 @@ public struct ValidationFailure<T> : ValidationType {
 /// Validates that the tested value is nil.
 public struct ValidationNil<T> : ValidationType {
     public init() { }
-    public func validate(value: T?) throws -> T? {
+    public func validate(_ value: T?) throws -> T? {
         guard value == nil else {
             throw ValidationError(value: value, message: ValidationNilFailedMessage())
         }
@@ -311,7 +311,7 @@ public struct ValidationNil<T> : ValidationType {
 /// Returns the unwrapped value.
 public struct ValidationNotNil<T> : ValidationType {
     public init() { }
-    public func validate(value: T?) throws -> T {
+    public func validate(_ value: T?) throws -> T {
         return try validateNotNil(value)
     }
 }
@@ -320,23 +320,23 @@ public struct ValidationNotNil<T> : ValidationType {
 // MARK: - String Validations
 
 // TODO: check for performance penalty using only ForwardIndexType, and see whether RandomAccessIndexType performs better.
-public enum ValidRange<T where T: ForwardIndexType, T: Comparable> {
-    case Minimum(T)
-    case Maximum(T)
-    case Range(Swift.Range<T>)
+public enum ValidRange<T> where T: Comparable, T: Comparable {
+    case minimum(T)
+    case maximum(T)
+    case range(Swift.Range<T>)
 }
 
 /// Validation that always pass.
 public struct ValidationTrim: ValidationType {
-    let characterSet: NSCharacterSet
-    public init(characterSet: NSCharacterSet = NSCharacterSet.whitespaceAndNewlineCharacterSet()) {
+    let characterSet: CharacterSet
+    public init(characterSet: CharacterSet = CharacterSet.whitespacesAndNewlines) {
         self.characterSet = characterSet
     }
-    public func validate(string: String?) throws -> String? {
+    public func validate(_ string: String?) throws -> String? {
         guard let string = string else {
             return nil
         }
-        return (string as NSString).stringByTrimmingCharactersInSet(characterSet)
+        return (string as NSString).trimmingCharacters(in: characterSet)
     }
 }
 
@@ -344,29 +344,29 @@ public struct ValidationTrim: ValidationType {
 public struct ValidationStringLength : ValidationType {
     let range: ValidRange<Int>
     public init(minimum: Int) {
-        self.range = ValidRange.Minimum(minimum)
+        self.range = ValidRange.minimum(minimum)
     }
     public init(maximum: Int) {
-        self.range = ValidRange.Maximum(maximum)
+        self.range = ValidRange.maximum(maximum)
     }
     public init(range: Range<Int>) {
-        self.range = ValidRange.Range(range)
+        self.range = ValidRange.range(range)
     }
-    public func validate(string: String?) throws -> String? {
+    public func validate(_ string: String?) throws -> String? {
         switch range {
-        case .Minimum(let minimum):
+        case .minimum(let minimum):
             let string = try validateNotNil(string, message: ValidationStringLengthMinimumFailedMessage(minimum))
             guard string.characters.count >= minimum else {
                 throw ValidationError(value: string, message: ValidationStringLengthMinimumFailedMessage(minimum))
             }
             return string
-        case .Maximum(let maximum):
+        case .maximum(let maximum):
             let string = try validateNotNil(string, message: ValidationStringLengthMaximumFailedMessage(maximum))
             guard string.characters.count <= maximum else {
                 throw ValidationError(value: string, message: ValidationStringLengthMaximumFailedMessage(maximum))
             }
             return string
-        case.Range(let range):
+        case.range(let range):
             let string = try validateNotNil(string, message: ValidationStringLengthRangeFailedMessage(range))
             guard range ~= string.characters.count else {
                 throw ValidationError(value: string, message: ValidationStringLengthRangeFailedMessage(range))
@@ -383,12 +383,12 @@ public struct ValidationRegularExpression : ValidationType {
         self.regex = regex
     }
     public init(pattern: String) {
-        try! self.init(NSRegularExpression(pattern: pattern, options: NSRegularExpressionOptions()))
+        try! self.init(NSRegularExpression(pattern: pattern, options: NSRegularExpression.Options()))
     }
-    public func validate(string: String?) throws -> String {
+    public func validate(_ string: String?) throws -> String {
         let string = try validateNotNil(string, message: ValidationFailedMessage())
         let nsString = string as NSString
-        let match = regex.rangeOfFirstMatchInString(string, options: NSMatchingOptions(), range: NSRange(location: 0, length: nsString.length))
+        let match = regex.rangeOfFirstMatch(in: string, options: NSRegularExpression.MatchingOptions(), range: NSRange(location: 0, length: nsString.length))
         guard match.location != NSNotFound else {
             throw ValidationError(value: string, message: ValidationFailedMessage())
         }
@@ -400,9 +400,9 @@ public struct ValidationRegularExpression : ValidationType {
 // MARK: - CollectionType Validations
 
 /// Validates that the tested collection is not empty.
-public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
+public struct ValidationCollectionNotEmpty<C: Collection> : ValidationType {
     public init() { }
-    public func validate(collection: C?) throws -> C {
+    public func validate(_ collection: C?) throws -> C {
         let collection = try validateNotNil(collection, message: ValidationNotEmptyFailedMessage())
         guard collection.count > 0 else {
             throw ValidationError(value: collection, message: ValidationNotEmptyFailedMessage())
@@ -412,9 +412,9 @@ public struct ValidationCollectionNotEmpty<C: CollectionType> : ValidationType {
 }
 
 /// Validates that the tested collection is nil or empty.
-public struct ValidationCollectionEmpty<C: CollectionType> : ValidationType {
+public struct ValidationCollectionEmpty<C: Collection> : ValidationType {
     public init() { }
-    public func validate(collection: C?) throws -> C? {
+    public func validate(_ collection: C?) throws -> C? {
         guard let collection = collection else {
             return nil
         }
@@ -429,12 +429,12 @@ public struct ValidationCollectionEmpty<C: CollectionType> : ValidationType {
 // MARK: - Equatable Validations
 
 /// Validates equality.
-public struct ValidationEqual<T where T: Equatable> : ValidationType {
+public struct ValidationEqual<T> : ValidationType where T: Equatable {
     public let target: T
     public init(_ target: T) {
         self.target = target
     }
-    public func validate(value: T?) throws -> T {
+    public func validate(_ value: T?) throws -> T {
         let value = try validateNotNil(value, message: ValidationEqualFailedMessage(target))
         guard value == target else {
             throw ValidationError(value: value, message: ValidationEqualFailedMessage(target))
@@ -444,12 +444,12 @@ public struct ValidationEqual<T where T: Equatable> : ValidationType {
 }
 
 /// Validates inequality.
-public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
+public struct ValidationNotEqual<T> : ValidationType where T: Equatable {
     public let target: T
     public init(_ target: T) {
         self.target = target
     }
-    public func validate(value: T?) throws -> T? {
+    public func validate(_ value: T?) throws -> T? {
         guard let value = value else {
             return nil
         }
@@ -463,7 +463,7 @@ public struct ValidationNotEqual<T where T: Equatable> : ValidationType {
 /// Validates the inclusion of the tested value in a collection.
 public struct ValidationElementOf<T: Equatable> : ValidationType {
     let block: (T?) throws -> T
-    public init<C where C: CollectionType, C.Generator.Element == T>(_ collection: C) {
+    public init<C>(_ collection: C) where C: Collection, C.Iterator.Element == T {
         block = { (value: T?) -> T in
             guard let value = value else {
                 throw ValidationError(value: nil, message: ValidationElementFailedMessage(collection))
@@ -474,7 +474,7 @@ public struct ValidationElementOf<T: Equatable> : ValidationType {
             return value
         }
     }
-    public func validate(value: T?) throws -> T {
+    public func validate(_ value: T?) throws -> T {
         return try block(value)
     }
 }
@@ -482,7 +482,7 @@ public struct ValidationElementOf<T: Equatable> : ValidationType {
 /// Validates that a tested value is not in a collection.
 public struct ValidationNotElementOf<T: Equatable> : ValidationType {
     let block: (T?) throws -> T?
-    public init<C where C: CollectionType, C.Generator.Element == T>(_ collection: C) {
+    public init<C>(_ collection: C) where C: Collection, C.Iterator.Element == T {
         block = { (value: T?) -> T? in
             guard let value = value else {
                 return nil
@@ -493,7 +493,7 @@ public struct ValidationNotElementOf<T: Equatable> : ValidationType {
             return value
         }
     }
-    public func validate(value: T?) throws -> T? {
+    public func validate(_ value: T?) throws -> T? {
         return try block(value)
     }
 }
@@ -502,9 +502,9 @@ public struct ValidationNotElementOf<T: Equatable> : ValidationType {
 // MARK: - RawRepresentable Validations
 
 /// Validates that the tested value is a raw representation of the tested type.
-public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
+public struct ValidationRawValue<T> : ValidationType where T: RawRepresentable {
     public init() { }
-    public func validate(value: T.RawValue?) throws -> T {
+    public func validate(_ value: T.RawValue?) throws -> T {
         let value = try validateNotNil(value, message: ValidationRawValueFailedMessage(T.self))
         guard let result = T(rawValue: value) else {
             throw ValidationError(value: value, message: ValidationRawValueFailedMessage(T.self))
@@ -517,32 +517,32 @@ public struct ValidationRawValue<T where T: RawRepresentable> : ValidationType {
 // MARK: - Range Validations
 
 /// Validates the inclusion of the tested value in a range.
-public struct ValidationRange<T where T: ForwardIndexType, T: Comparable> : ValidationType {
+public struct ValidationRange<T> : ValidationType where T: Comparable, T: Comparable {
     let range: ValidRange<T>
     public init(minimum: T) {
-        self.range = ValidRange.Minimum(minimum)
+        self.range = ValidRange.minimum(minimum)
     }
     public init(maximum: T) {
-        self.range = ValidRange.Maximum(maximum)
+        self.range = ValidRange.maximum(maximum)
     }
     public init(range: Range<T>) {
-        self.range = ValidRange.Range(range)
+        self.range = ValidRange.range(range)
     }
-    public func validate(value: T?) throws -> T {
+    public func validate(_ value: T?) throws -> T {
         switch range {
-        case .Minimum(let minimum):
+        case .minimum(let minimum):
             let value = try validateNotNil(value, message: ValidationMinimumFailedMessage(minimum))
             guard value >= minimum else {
                 throw ValidationError(value: value, message: ValidationMinimumFailedMessage(minimum))
             }
             return value
-        case .Maximum(let maximum):
+        case .maximum(let maximum):
             let value = try validateNotNil(value, message: ValidationMaximumFailedMessage(maximum))
             guard value <= maximum else {
                 throw ValidationError(value: value, message: ValidationMaximumFailedMessage(maximum))
             }
             return value
-        case.Range(let range):
+        case.range(let range):
             let value = try validateNotNil(value, message: ValidationRangeFailedMessage(range))
             guard range ~= value else {
                 throw ValidationError(value: value, message: ValidationRangeFailedMessage(range))

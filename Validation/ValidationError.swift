@@ -25,43 +25,43 @@
 /**
 A Validation Error
 */
-public struct ValidationError : ErrorType {
+public struct ValidationError : Error {
     
     public init(value: Any?, message: String? = nil) {
-        self.init(.Value(value: value, message: message ?? ValidationFailedMessage()))
+        self.init(.value(value: value, message: message ?? ValidationFailedMessage()))
     }
     
     public init(value: Any, message: String, propertyNames: [String]) {
-        self.init(.Model(value: value, message: message, propertyNames: propertyNames, error: nil))
+        self.init(.model(value: value, message: message, propertyNames: propertyNames, error: nil))
     }
     
     
     // not public
     
     enum CompoundMode {
-        case And
-        case Or
+        case and
+        case or
     }
     
-    indirect enum Type {
+    indirect enum GRType {
         /// Error on a value
-        case Value(value: Any?, message: String)
+        case value(value: Any?, message: String)
         
         // TODO: the Model and Property cases are a conceptual mess.
         
         /// Error on a model
-        case Model(value: Any, message: String, propertyNames: [String], error: ValidationError?)
+        case model(value: Any, message: String, propertyNames: [String], error: ValidationError?)
         
         /// Error on a property
-        case Property(value: Any, propertyName: String, error: ValidationError)
+        case property(value: Any, propertyName: String, error: ValidationError)
         
         /// Compound errors
-        case Compound(mode: CompoundMode, errors: [ValidationError])
+        case compound(mode: CompoundMode, errors: [ValidationError])
     }
     
-    let type: Type
+    let type: GRType
     
-    init(_ type: Type) {
+    init(_ type: GRType) {
         self.type = type
     }
 }
@@ -71,9 +71,9 @@ extension ValidationError : CustomStringConvertible {
         return description(nil)
     }
     
-    private func description(valueDescription: String?) -> String {
+    fileprivate func description(_ valueDescription: String?) -> String {
         switch type {
-        case .Value(let value, let message):
+        case .value(let value, let message):
             if let valueDescription = valueDescription {
                 return "\(valueDescription) \(message)"
             } else if let value = value {
@@ -81,15 +81,15 @@ extension ValidationError : CustomStringConvertible {
             } else {
                 return "nil \(message)"
             }
-        case .Property(let value, let propertyName, let error):
+        case .property(let value, let propertyName, let error):
             return "Invalid \(String(reflecting: value)): \(error.description(propertyName))"
-        case .Model(let value, let message, _, _):
+        case .model(let value, let message, _, _):
             return "Invalid \(String(reflecting: value)): \(message)"
-        case .Compound(let mode, let errors):
+        case .compound(let mode, let errors):
             switch mode {
-            case .Or:
+            case .or:
                 return errors.last!.description(valueDescription)
-            case .And:
+            case .and:
                 // Avoid duplicated descriptions
                 var found = Set<String>()
                 var uniq = [String]()
@@ -100,7 +100,7 @@ extension ValidationError : CustomStringConvertible {
                         found.insert(description)
                     }
                 }
-                return uniq.joinWithSeparator(" ")
+                return uniq.joined(separator: " ")
             }
         }
     }
@@ -109,41 +109,41 @@ extension ValidationError : CustomStringConvertible {
 extension ValidationError {
     /// If errors is empty, returns nil. If error contains a single error,
     /// returns this error. Otherwise, returns a compound error.
-    public static func compound(errors: [ValidationError]) -> ValidationError? {
-        return compound(errors, mode: .And)
+    public static func compound(_ errors: [ValidationError]) -> ValidationError? {
+        return compound(errors, mode: .and)
     }
     
-    static func compound(errors: [ValidationError], mode: CompoundMode) -> ValidationError? {
+    static func compound(_ errors: [ValidationError], mode: CompoundMode) -> ValidationError? {
         switch errors.count {
         case 0:
             return nil
         case 1:
             return errors.first
         default:
-            return ValidationError(.Compound(mode: mode, errors: errors))
+            return ValidationError(.compound(mode: mode, errors: errors))
         }
     }
 }
 
 extension ValidationError {
     /// Returns all errors for a given property name.
-    public func propertyErrors(propertyName: String) -> [ValidationError] {
+    public func propertyErrors(_ propertyName: String) -> [ValidationError] {
         switch type {
-        case .Value:
+        case .value:
             return []
-        case .Property(_, let name, _):
+        case .property(_, let name, _):
             if name == propertyName {
                 return [self]
             } else {
                 return []
             }
-        case .Model(_, _, let propertyNames, _):
+        case .model(_, _, let propertyNames, _):
             if propertyNames.contains(propertyName) {
                 return [self]
             } else {
                 return []
             }
-        case .Compound(_, let errors):
+        case .compound(_, let errors):
             return errors.flatMap { $0.propertyErrors(propertyName) }
         }
     }
@@ -151,13 +151,13 @@ extension ValidationError {
     /// Returns all errors for the model as a whole.
     public func modelErrors() -> [ValidationError] {
         switch type {
-        case .Value:
+        case .value:
             return []
-        case .Property:
+        case .property:
             return []
-        case .Model:
+        case .model:
             return [self]
-        case .Compound(_, let errors):
+        case .compound(_, let errors):
             return errors.flatMap { $0.modelErrors() }
         }
     }
