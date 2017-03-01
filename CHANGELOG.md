@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+## 0.3.0
+
+Released March 1, 2017
+
+**New*
+
+- Conversion to Swift 3 syntax
+
 ## 0.2.0
 
 Released August 25, 2015
