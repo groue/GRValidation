@@ -51,12 +51,12 @@ Compare:
         }
     }
 */
-public class ValidationPlan {
-    private var errors = [ValidationError]()
+open class ValidationPlan {
+    fileprivate var errors = [ValidationError]()
     
     public init() { }
     
-    public func append(@noescape block: () throws -> ()) rethrows -> ValidationPlan {
+    open func append(block: () throws -> ()) rethrows -> ValidationPlan {
         do {
             try block()
         } catch let error as ValidationError {
@@ -65,7 +65,7 @@ public class ValidationPlan {
         return self
     }
     
-    public func validate() throws {
+    open func validate() throws {
         if let error = ValidationError.compound(errors) {
             throw error
         }

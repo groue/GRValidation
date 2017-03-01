@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 	s.name     = 'GRValidation'
-	s.version  = '0.2.0'
+	s.version  = '0.3.0'
 	s.license  = { :type => 'MIT', :file => 'LICENSE' }
 	s.summary  = 'Validation toolkit for Swift.'
 	s.homepage = 'https://github.com/groue/GRValidation'
